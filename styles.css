@@ -1251,13 +1251,29 @@ body {
     }
 
     /* Mobile Modals */
+    .modal {
+        z-index: 9999 !important;
+        position: fixed !important;
+        top: 0 !important;
+        left: 0 !important;
+        width: 100% !important;
+        height: 100% !important;
+        background-color: rgba(0,0,0,0.7) !important;
+        backdrop-filter: blur(3px);
+        -webkit-backdrop-filter: blur(3px);
+    }
+
     .modal-content {
-        margin: 5% auto;
-        width: 95%;
-        max-width: none;
-        padding: 1rem;
-        max-height: 90vh;
-        overflow-y: auto;
+        margin: 2% auto !important;
+        width: 96% !important;
+        max-width: none !important;
+        padding: 1.5rem !important;
+        max-height: 95vh !important;
+        overflow-y: auto !important;
+        position: relative !important;
+        border-radius: 12px !important;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.5) !important;
+        -webkit-overflow-scrolling: touch;
     }
 
     .modal h2 {
@@ -1270,19 +1286,51 @@ body {
     }
 
     .form-group input,
-    .form-group select {
-        padding: 0.75rem;
-        font-size: 16px; /* Prevents zoom on iOS */
+    .form-group select,
+    .form-group textarea {
+        padding: 1rem !important;
+        font-size: 16px !important; /* Prevents zoom on iOS */
+        border: 2px solid #ddd !important;
+        border-radius: 8px !important;
+        width: 100% !important;
+        box-sizing: border-box !important;
+        -webkit-appearance: none !important;
+        -moz-appearance: none !important;
+        appearance: none !important;
+        touch-action: manipulation !important;
+    }
+
+    .form-group input:focus,
+    .form-group select:focus,
+    .form-group textarea:focus {
+        border-color: #3498db !important;
+        outline: none !important;
+        box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.2) !important;
     }
 
     .form-actions {
         flex-direction: column;
-        gap: 0.75rem;
-        margin-top: 1.5rem;
+        gap: 1rem;
+        margin-top: 2rem;
     }
 
     .form-actions .btn {
-        width: 100%;
+        width: 100% !important;
+        padding: 1.25rem !important;
+        font-size: 1.1rem !important;
+        font-weight: 600 !important;
+        border-radius: 8px !important;
+        border: none !important;
+        cursor: pointer !important;
+        touch-action: manipulation !important;
+        -webkit-tap-highlight-color: transparent !important;
+        user-select: none !important;
+        -webkit-user-select: none !important;
+        min-height: 50px !important;
+    }
+
+    .form-actions .btn:active {
+        transform: scale(0.98) !important;
     }
 
     /* Mobile Invoice */
@@ -1742,32 +1790,87 @@ html {
 
 /* Mobile Safari Button Fix */
 button, .btn, .btn-small, .btn-success, .btn-primary, .btn-secondary, .btn-danger, .btn-warning {
-    -webkit-appearance: none;
-    -webkit-tap-highlight-color: transparent;
-    cursor: pointer;
-    touch-action: manipulation;
-    user-select: none;
-    -webkit-user-select: none;
-    -moz-user-select: none;
-    -ms-user-select: none;
+    -webkit-appearance: none !important;
+    -webkit-tap-highlight-color: transparent !important;
+    cursor: pointer !important;
+    touch-action: manipulation !important;
+    user-select: none !important;
+    -webkit-user-select: none !important;
+    -moz-user-select: none !important;
+    -ms-user-select: none !important;
+    -webkit-touch-callout: none !important;
+    position: relative !important;
+    z-index: 1 !important;
+    pointer-events: auto !important;
 }
 
-/* Ensure buttons work on all mobile devices */
+/* Comprehensive mobile button fixes */
 @media (max-width: 768px) {
     button, .btn, .btn-small {
-        position: relative;
-        z-index: 1;
-        pointer-events: auto;
+        min-height: 50px !important;
+        min-width: 50px !important;
+        padding: 1rem !important;
+        font-size: 1rem !important;
+        font-weight: 600 !important;
+        border-radius: 8px !important;
+        border: 2px solid transparent !important;
+        background-clip: padding-box !important;
+        transition: all 0.2s ease !important;
     }
 
-    /* Fix for iOS Safari double-tap issue */
-    .btn-success, .btn-primary, .btn-secondary, .btn-danger, .btn-warning {
-        -webkit-touch-callout: none;
-        -webkit-user-select: none;
-        -khtml-user-select: none;
-        -moz-user-select: none;
-        -ms-user-select: none;
-        user-select: none;
+    /* Specific button type styles for mobile */
+    .btn-success {
+        background: #28a745 !important;
+        color: white !important;
+        border-color: #28a745 !important;
+    }
+
+    .btn-primary {
+        background: #007bff !important;
+        color: white !important;
+        border-color: #007bff !important;
+    }
+
+    .btn-secondary {
+        background: #6c757d !important;
+        color: white !important;
+        border-color: #6c757d !important;
+    }
+
+    .btn-danger {
+        background: #dc3545 !important;
+        color: white !important;
+        border-color: #dc3545 !important;
+    }
+
+    .btn-warning {
+        background: #ffc107 !important;
+        color: #212529 !important;
+        border-color: #ffc107 !important;
+    }
+
+    /* Active states for mobile */
+    button:active, .btn:active, .btn-small:active {
+        transform: scale(0.95) !important;
+        opacity: 0.8 !important;
+    }
+
+    /* Close button fix for modals */
+    .close {
+        font-size: 2rem !important;
+        padding: 1rem !important;
+        min-width: 50px !important;
+        min-height: 50px !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        position: absolute !important;
+        top: 10px !important;
+        right: 10px !important;
+        background: rgba(0,0,0,0.1) !important;
+        border-radius: 50% !important;
+        cursor: pointer !important;
+        z-index: 1000 !important;
     }
 }
 

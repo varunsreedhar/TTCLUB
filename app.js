@@ -122,12 +122,8 @@ class TTClubManager {
             this.renderPendingFees();
             this.updateSaveStatus();
 
-            // Ensure mobile touch support is applied to all buttons
-            if (window.innerWidth <= 768) {
-                setTimeout(() => {
-                    this.addCollectFeeButtonTouchSupport();
-                }, 200);
-            }
+            // Initialize comprehensive mobile support
+            this.initializeMobileSupport();
 
             console.log('App initialization completed successfully');
         } catch (error) {
@@ -197,84 +193,125 @@ class TTClubManager {
     }
 
     addCollectFeeButtonTouchSupport() {
-        // This will be called after rendering members and pending fees to handle dynamically created buttons
-        const allActionButtons = document.querySelectorAll('.btn-success, .btn-danger, .btn-primary, .btn-secondary');
-        allActionButtons.forEach(btn => {
-            // Ensure the button is properly clickable on mobile
+        console.log('Setting up mobile button support...');
+
+        // Handle all buttons with a comprehensive approach
+        this.setupMobileButtonSupport();
+
+        // Handle specific buttons that might be dynamically created
+        this.setupDynamicButtonSupport();
+    }
+
+    setupMobileButtonSupport() {
+        // Use event delegation for all buttons to handle dynamic content
+        document.body.removeEventListener('click', this.globalButtonClickHandler);
+        document.body.removeEventListener('touchend', this.globalButtonTouchHandler);
+
+        // Create bound handlers to maintain 'this' context
+        this.globalButtonClickHandler = this.handleGlobalButtonClick.bind(this);
+        this.globalButtonTouchHandler = this.handleGlobalButtonTouch.bind(this);
+
+        // Add global event listeners
+        document.body.addEventListener('click', this.globalButtonClickHandler, { passive: false });
+        document.body.addEventListener('touchend', this.globalButtonTouchHandler, { passive: false });
+
+        // Add visual feedback for touch
+        document.body.addEventListener('touchstart', (e) => {
+            const button = e.target.closest('button, .btn');
+            if (button && !button.disabled) {
+                this.addButtonTouchFeedback(button);
+            }
+        }, { passive: true });
+
+        document.body.addEventListener('touchend', (e) => {
+            const button = e.target.closest('button, .btn');
+            if (button) {
+                this.removeButtonTouchFeedback(button);
+            }
+        }, { passive: true });
+
+        console.log('Mobile button support setup complete');
+    }
+
+    handleGlobalButtonClick(e) {
+        const button = e.target.closest('button, .btn');
+        if (!button || button.disabled) return;
+
+        console.log('Global button click:', button.id || button.className);
+
+        // Handle onclick attributes for mobile
+        const onclickAttr = button.getAttribute('onclick');
+        if (onclickAttr) {
+            e.preventDefault();
+            e.stopPropagation();
+
+            try {
+                // Execute the onclick function
+                eval(onclickAttr);
+                console.log('Executed onclick:', onclickAttr.substring(0, 50) + '...');
+            } catch (error) {
+                console.error('Error executing onclick:', error);
+            }
+        }
+    }
+
+    handleGlobalButtonTouch(e) {
+        const button = e.target.closest('button, .btn');
+        if (!button || button.disabled) return;
+
+        console.log('Global button touch:', button.id || button.className);
+
+        // Handle onclick attributes for mobile touch
+        const onclickAttr = button.getAttribute('onclick');
+        if (onclickAttr) {
+            e.preventDefault();
+            e.stopPropagation();
+
+            try {
+                // Execute the onclick function
+                eval(onclickAttr);
+                console.log('Executed touch onclick:', onclickAttr.substring(0, 50) + '...');
+            } catch (error) {
+                console.error('Error executing touch onclick:', error);
+            }
+        }
+    }
+
+    addButtonTouchFeedback(button) {
+        button.style.transition = 'all 0.1s ease';
+        button.style.transform = 'scale(0.95)';
+
+        if (button.classList.contains('btn-success')) {
+            button.style.backgroundColor = '#1e7e34';
+        } else if (button.classList.contains('btn-danger')) {
+            button.style.backgroundColor = '#c82333';
+        } else if (button.classList.contains('btn-primary')) {
+            button.style.backgroundColor = '#0056b3';
+        } else if (button.classList.contains('btn-secondary')) {
+            button.style.backgroundColor = '#545b62';
+        } else if (button.classList.contains('btn-warning')) {
+            button.style.backgroundColor = '#e0a800';
+        }
+    }
+
+    removeButtonTouchFeedback(button) {
+        setTimeout(() => {
+            button.style.backgroundColor = '';
+            button.style.transform = '';
+            button.style.transition = '';
+        }, 150);
+    }
+
+    setupDynamicButtonSupport() {
+        // Ensure all buttons have proper mobile attributes
+        const allButtons = document.querySelectorAll('button, .btn');
+        allButtons.forEach(btn => {
             btn.style.touchAction = 'manipulation';
             btn.style.userSelect = 'none';
+            btn.style.webkitUserSelect = 'none';
             btn.style.webkitTapHighlightColor = 'transparent';
-
-            // Remove existing onclick and add proper event listeners for mobile
-            const onclickAttr = btn.getAttribute('onclick');
-            if (onclickAttr && !btn.hasAttribute('data-mobile-fixed')) {
-                btn.removeAttribute('onclick');
-                btn.setAttribute('data-mobile-fixed', 'true');
-
-                // Add both click and touchend event listeners
-                const clickHandler = (e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-
-                    // Execute the original onclick function
-                    try {
-                        eval(onclickAttr);
-                    } catch (error) {
-                        console.error('Error executing button click:', error);
-                    }
-                };
-
-                btn.addEventListener('click', clickHandler);
-                btn.addEventListener('touchend', (e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    clickHandler(e);
-                }, { passive: false });
-            }
-
-            // Add visual feedback for touch based on button type
-            btn.addEventListener('touchstart', (e) => {
-                if (btn.classList.contains('btn-success')) {
-                    btn.style.backgroundColor = '#1e7e34';
-                } else if (btn.classList.contains('btn-danger')) {
-                    btn.style.backgroundColor = '#c82333';
-                } else if (btn.classList.contains('btn-primary')) {
-                    btn.style.backgroundColor = '#0056b3';
-                } else if (btn.classList.contains('btn-secondary')) {
-                    btn.style.backgroundColor = '#545b62';
-                }
-                btn.style.transform = 'scale(0.95)';
-            }, { passive: true });
-
-            btn.addEventListener('touchend', (e) => {
-                setTimeout(() => {
-                    btn.style.backgroundColor = '';
-                    btn.style.transform = '';
-                }, 200);
-            }, { passive: true });
+            btn.style.webkitTouchCallout = 'none';
         });
-
-        // Also handle the Add Pending Fee button specifically
-        const addPendingFeeBtn = document.getElementById('add-pending-fee-btn');
-        if (addPendingFeeBtn && !addPendingFeeBtn.hasAttribute('data-mobile-fixed')) {
-            addPendingFeeBtn.setAttribute('data-mobile-fixed', 'true');
-            addPendingFeeBtn.style.touchAction = 'manipulation';
-            addPendingFeeBtn.style.userSelect = 'none';
-            addPendingFeeBtn.style.webkitTapHighlightColor = 'transparent';
-
-            // Add visual feedback
-            addPendingFeeBtn.addEventListener('touchstart', (e) => {
-                addPendingFeeBtn.style.backgroundColor = '#545b62';
-                addPendingFeeBtn.style.transform = 'scale(0.95)';
-            }, { passive: true });
-
-            addPendingFeeBtn.addEventListener('touchend', (e) => {
-                setTimeout(() => {
-                    addPendingFeeBtn.style.backgroundColor = '';
-                    addPendingFeeBtn.style.transform = '';
-                }, 200);
-            }, { passive: true });
-        }
     }
 
     addMobileEventDelegation() {
@@ -317,6 +354,129 @@ class TTClubManager {
             if (modal.style.display === 'block') {
                 modal.style.display = 'none';
             }
+        });
+    }
+
+    initializeMobileSupport() {
+        console.log('Initializing comprehensive mobile support...');
+
+        // Check if we're on mobile
+        const isMobile = window.innerWidth <= 768 || /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+
+        if (isMobile) {
+            console.log('Mobile device detected, applying mobile fixes...');
+
+            // Apply mobile button support
+            setTimeout(() => {
+                this.addCollectFeeButtonTouchSupport();
+                this.fixMobileModals();
+                this.fixMobileNavigation();
+                this.addMobileScrollFixes();
+            }, 300);
+        }
+
+        // Always apply these fixes regardless of device
+        this.addUniversalButtonFixes();
+    }
+
+    fixMobileModals() {
+        console.log('Fixing mobile modals...');
+
+        // Ensure all modals have proper mobile styling
+        const modals = document.querySelectorAll('.modal');
+        modals.forEach(modal => {
+            modal.style.zIndex = '9999';
+            modal.style.position = 'fixed';
+            modal.style.top = '0';
+            modal.style.left = '0';
+            modal.style.width = '100%';
+            modal.style.height = '100%';
+
+            const modalContent = modal.querySelector('.modal-content');
+            if (modalContent) {
+                modalContent.style.margin = '2% auto';
+                modalContent.style.width = '96%';
+                modalContent.style.maxWidth = 'none';
+                modalContent.style.maxHeight = '95vh';
+                modalContent.style.overflowY = 'auto';
+                modalContent.style.webkitOverflowScrolling = 'touch';
+            }
+        });
+
+        // Fix close buttons
+        const closeButtons = document.querySelectorAll('.close');
+        closeButtons.forEach(btn => {
+            btn.style.fontSize = '2rem';
+            btn.style.padding = '1rem';
+            btn.style.minWidth = '50px';
+            btn.style.minHeight = '50px';
+            btn.style.display = 'flex';
+            btn.style.alignItems = 'center';
+            btn.style.justifyContent = 'center';
+            btn.style.position = 'absolute';
+            btn.style.top = '10px';
+            btn.style.right = '10px';
+            btn.style.background = 'rgba(0,0,0,0.1)';
+            btn.style.borderRadius = '50%';
+            btn.style.cursor = 'pointer';
+            btn.style.zIndex = '1000';
+            btn.style.touchAction = 'manipulation';
+        });
+    }
+
+    fixMobileNavigation() {
+        console.log('Fixing mobile navigation...');
+
+        // Ensure navigation buttons work on mobile
+        const navButtons = document.querySelectorAll('.nav-btn');
+        navButtons.forEach(btn => {
+            btn.style.touchAction = 'manipulation';
+            btn.style.minHeight = '50px';
+            btn.style.minWidth = '50px';
+        });
+    }
+
+    addMobileScrollFixes() {
+        console.log('Adding mobile scroll fixes...');
+
+        // Prevent body scroll when modal is open
+        const modals = document.querySelectorAll('.modal');
+        modals.forEach(modal => {
+            const observer = new MutationObserver((mutations) => {
+                mutations.forEach((mutation) => {
+                    if (mutation.type === 'attributes' && mutation.attributeName === 'style') {
+                        if (modal.style.display === 'block') {
+                            document.body.style.overflow = 'hidden';
+                            document.body.style.position = 'fixed';
+                            document.body.style.width = '100%';
+                        } else {
+                            document.body.style.overflow = '';
+                            document.body.style.position = '';
+                            document.body.style.width = '';
+                        }
+                    }
+                });
+            });
+
+            observer.observe(modal, { attributes: true });
+        });
+    }
+
+    addUniversalButtonFixes() {
+        console.log('Adding universal button fixes...');
+
+        // Apply to all buttons
+        const allButtons = document.querySelectorAll('button, .btn, .btn-small, input[type="submit"], input[type="button"]');
+        allButtons.forEach(btn => {
+            btn.style.webkitAppearance = 'none';
+            btn.style.webkitTapHighlightColor = 'transparent';
+            btn.style.touchAction = 'manipulation';
+            btn.style.userSelect = 'none';
+            btn.style.webkitUserSelect = 'none';
+            btn.style.webkitTouchCallout = 'none';
+            btn.style.position = 'relative';
+            btn.style.zIndex = '1';
+            btn.style.pointerEvents = 'auto';
         });
     }
 
