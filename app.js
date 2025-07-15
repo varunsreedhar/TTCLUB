@@ -151,22 +151,118 @@ class TTClubManager {
 
         // Add swipe support for navigation (optional)
         this.addSwipeNavigation();
+
+        // Add mobile-specific event delegation for better button handling
+        this.addMobileEventDelegation();
     }
 
     addTouchSupport() {
         // Add touch feedback to buttons
-        const buttons = document.querySelectorAll('.btn, .nav-btn');
+        const buttons = document.querySelectorAll('.btn, .nav-btn, .btn-small, .btn-edit-fee');
         buttons.forEach(btn => {
-            btn.addEventListener('touchstart', () => {
+            // Prevent double-tap zoom on buttons
+            btn.addEventListener('touchstart', (e) => {
                 btn.style.transform = 'scale(0.95)';
-            });
+                btn.style.transition = 'transform 0.1s ease';
+            }, { passive: true });
 
-            btn.addEventListener('touchend', () => {
+            btn.addEventListener('touchend', (e) => {
                 setTimeout(() => {
                     btn.style.transform = '';
-                }, 100);
-            });
+                    btn.style.transition = '';
+                }, 150);
+            }, { passive: true });
+
+            // Prevent context menu on long press for action buttons
+            if (btn.classList.contains('btn-small') || btn.classList.contains('btn-edit-fee')) {
+                btn.addEventListener('contextmenu', (e) => {
+                    e.preventDefault();
+                });
+            }
         });
+
+        // Add specific touch handling for collect fee buttons
+        this.addCollectFeeButtonTouchSupport();
+    }
+
+    addCollectFeeButtonTouchSupport() {
+        // This will be called after rendering members to handle dynamically created buttons
+        const collectButtons = document.querySelectorAll('.btn-success');
+        collectButtons.forEach(btn => {
+            // Ensure the button is properly clickable on mobile
+            btn.style.touchAction = 'manipulation';
+            btn.style.userSelect = 'none';
+            btn.style.webkitTapHighlightColor = 'transparent';
+
+            // Remove existing onclick and add proper event listeners for mobile
+            const onclickAttr = btn.getAttribute('onclick');
+            if (onclickAttr && !btn.hasAttribute('data-mobile-fixed')) {
+                btn.removeAttribute('onclick');
+                btn.setAttribute('data-mobile-fixed', 'true');
+
+                // Add both click and touchend event listeners
+                const clickHandler = (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+
+                    // Execute the original onclick function
+                    try {
+                        eval(onclickAttr);
+                    } catch (error) {
+                        console.error('Error executing button click:', error);
+                    }
+                };
+
+                btn.addEventListener('click', clickHandler);
+                btn.addEventListener('touchend', (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    clickHandler(e);
+                }, { passive: false });
+            }
+
+            // Add visual feedback for touch
+            btn.addEventListener('touchstart', (e) => {
+                btn.style.backgroundColor = '#1e7e34';
+                btn.style.transform = 'scale(0.95)';
+            }, { passive: true });
+
+            btn.addEventListener('touchend', (e) => {
+                setTimeout(() => {
+                    btn.style.backgroundColor = '';
+                    btn.style.transform = '';
+                }, 200);
+            }, { passive: true });
+        });
+    }
+
+    addMobileEventDelegation() {
+        // Add event delegation for better mobile button handling
+        document.body.addEventListener('touchstart', (e) => {
+            const target = e.target.closest('.btn-success, .btn-primary, .btn-secondary, .btn-danger, .btn-warning');
+            if (target) {
+                target.style.opacity = '0.8';
+                target.style.transform = 'scale(0.95)';
+            }
+        }, { passive: true });
+
+        document.body.addEventListener('touchend', (e) => {
+            const target = e.target.closest('.btn-success, .btn-primary, .btn-secondary, .btn-danger, .btn-warning');
+            if (target) {
+                setTimeout(() => {
+                    target.style.opacity = '';
+                    target.style.transform = '';
+                }, 150);
+            }
+        }, { passive: true });
+
+        // Prevent iOS Safari from showing the magnifying glass on long press
+        document.body.addEventListener('touchstart', (e) => {
+            if (e.target.closest('button, .btn')) {
+                e.target.style.webkitUserSelect = 'none';
+                e.target.style.webkitTouchCallout = 'none';
+            }
+        }, { passive: true });
     }
 
     handleOrientationChange() {
@@ -749,6 +845,13 @@ class TTClubManager {
 
         // Update member count display
         this.updateMemberCount(filteredMembers.length);
+
+        // Add touch support for dynamically created buttons (mobile)
+        if (window.innerWidth <= 768) {
+            setTimeout(() => {
+                this.addCollectFeeButtonTouchSupport();
+            }, 100);
+        }
     }
 
     renderMembersTableHeader(thead) {
