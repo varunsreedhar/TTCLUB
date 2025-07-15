@@ -119,7 +119,15 @@ class TTClubManager {
             this.updateDashboard();
             this.renderMembers();
             this.updateFeeManagement();
+            this.renderPendingFees();
             this.updateSaveStatus();
+
+            // Ensure mobile touch support is applied to all buttons
+            if (window.innerWidth <= 768) {
+                setTimeout(() => {
+                    this.addCollectFeeButtonTouchSupport();
+                }, 200);
+            }
 
             console.log('App initialization completed successfully');
         } catch (error) {
@@ -154,6 +162,9 @@ class TTClubManager {
 
         // Add mobile-specific event delegation for better button handling
         this.addMobileEventDelegation();
+
+        // Add global event delegation for dashboard cards
+        this.addDashboardCardDelegation();
     }
 
     addTouchSupport() {
@@ -186,9 +197,9 @@ class TTClubManager {
     }
 
     addCollectFeeButtonTouchSupport() {
-        // This will be called after rendering members to handle dynamically created buttons
-        const collectButtons = document.querySelectorAll('.btn-success');
-        collectButtons.forEach(btn => {
+        // This will be called after rendering members and pending fees to handle dynamically created buttons
+        const allActionButtons = document.querySelectorAll('.btn-success, .btn-danger, .btn-primary, .btn-secondary');
+        allActionButtons.forEach(btn => {
             // Ensure the button is properly clickable on mobile
             btn.style.touchAction = 'manipulation';
             btn.style.userSelect = 'none';
@@ -221,9 +232,17 @@ class TTClubManager {
                 }, { passive: false });
             }
 
-            // Add visual feedback for touch
+            // Add visual feedback for touch based on button type
             btn.addEventListener('touchstart', (e) => {
-                btn.style.backgroundColor = '#1e7e34';
+                if (btn.classList.contains('btn-success')) {
+                    btn.style.backgroundColor = '#1e7e34';
+                } else if (btn.classList.contains('btn-danger')) {
+                    btn.style.backgroundColor = '#c82333';
+                } else if (btn.classList.contains('btn-primary')) {
+                    btn.style.backgroundColor = '#0056b3';
+                } else if (btn.classList.contains('btn-secondary')) {
+                    btn.style.backgroundColor = '#545b62';
+                }
                 btn.style.transform = 'scale(0.95)';
             }, { passive: true });
 
@@ -234,6 +253,28 @@ class TTClubManager {
                 }, 200);
             }, { passive: true });
         });
+
+        // Also handle the Add Pending Fee button specifically
+        const addPendingFeeBtn = document.getElementById('add-pending-fee-btn');
+        if (addPendingFeeBtn && !addPendingFeeBtn.hasAttribute('data-mobile-fixed')) {
+            addPendingFeeBtn.setAttribute('data-mobile-fixed', 'true');
+            addPendingFeeBtn.style.touchAction = 'manipulation';
+            addPendingFeeBtn.style.userSelect = 'none';
+            addPendingFeeBtn.style.webkitTapHighlightColor = 'transparent';
+
+            // Add visual feedback
+            addPendingFeeBtn.addEventListener('touchstart', (e) => {
+                addPendingFeeBtn.style.backgroundColor = '#545b62';
+                addPendingFeeBtn.style.transform = 'scale(0.95)';
+            }, { passive: true });
+
+            addPendingFeeBtn.addEventListener('touchend', (e) => {
+                setTimeout(() => {
+                    addPendingFeeBtn.style.backgroundColor = '';
+                    addPendingFeeBtn.style.transform = '';
+                }, 200);
+            }, { passive: true });
+        }
     }
 
     addMobileEventDelegation() {
@@ -277,6 +318,68 @@ class TTClubManager {
                 modal.style.display = 'none';
             }
         });
+    }
+
+    addDashboardCardDelegation() {
+        // Add global event delegation for dashboard stat cards
+        document.body.addEventListener('click', (e) => {
+            const statCard = e.target.closest('.stat-card.clickable');
+            if (statCard) {
+                console.log('Dashboard card clicked via delegation');
+                e.preventDefault();
+                e.stopPropagation();
+
+                const navigateTo = statCard.getAttribute('data-navigate');
+                const filter = statCard.getAttribute('data-filter');
+
+                console.log('Navigate to:', navigateTo, 'Filter:', filter);
+
+                if (navigateTo) {
+                    this.navigateFromStatCard(navigateTo, filter);
+                }
+            }
+        });
+
+        document.body.addEventListener('touchend', (e) => {
+            const statCard = e.target.closest('.stat-card.clickable');
+            if (statCard) {
+                console.log('Dashboard card touched via delegation');
+                e.preventDefault();
+                e.stopPropagation();
+
+                const navigateTo = statCard.getAttribute('data-navigate');
+                const filter = statCard.getAttribute('data-filter');
+
+                console.log('Navigate to:', navigateTo, 'Filter:', filter);
+
+                if (navigateTo) {
+                    this.navigateFromStatCard(navigateTo, filter);
+                }
+            }
+        }, { passive: false });
+
+        // Add visual feedback via delegation
+        document.body.addEventListener('touchstart', (e) => {
+            const statCard = e.target.closest('.stat-card.clickable');
+            if (statCard) {
+                console.log('Touch start on dashboard card');
+                statCard.style.transform = 'scale(0.98)';
+                statCard.style.backgroundColor = '#f8f9fa';
+                statCard.style.borderColor = '#3498db';
+            }
+        }, { passive: true });
+
+        document.body.addEventListener('touchend', (e) => {
+            const statCard = e.target.closest('.stat-card.clickable');
+            if (statCard) {
+                console.log('Touch end on dashboard card');
+                setTimeout(() => {
+                    statCard.style.transform = '';
+                    statCard.style.backgroundColor = '';
+                    statCard.style.borderColor = '';
+                }, 200);
+            }
+        }, { passive: true });
     }
 
     addSwipeNavigation() {
@@ -638,6 +741,114 @@ class TTClubManager {
         document.getElementById('cancel-edit-fee').addEventListener('click', () => {
             document.getElementById('edit-member-fee-modal').style.display = 'none';
         });
+
+        // Dashboard stat card click events
+        this.setupDashboardCardClicks();
+    }
+
+    setupDashboardCardClicks() {
+        console.log('Setting up dashboard card clicks...');
+        const statCards = document.querySelectorAll('.stat-card.clickable');
+        console.log('Found stat cards:', statCards.length);
+
+        statCards.forEach((card, index) => {
+            console.log(`Setting up card ${index}:`, card.getAttribute('data-navigate'));
+
+            // Remove any existing event listeners by cloning the element
+            const newCard = card.cloneNode(true);
+            card.parentNode.replaceChild(newCard, card);
+
+            // Add click event listener to the new element
+            const clickHandler = (e) => {
+                console.log('Card clicked!', e.type);
+                e.preventDefault();
+                e.stopPropagation();
+
+                const navigateTo = newCard.getAttribute('data-navigate');
+                const filter = newCard.getAttribute('data-filter');
+
+                console.log('Navigate to:', navigateTo, 'Filter:', filter);
+
+                if (navigateTo) {
+                    this.navigateFromStatCard(navigateTo, filter);
+                } else {
+                    console.error('No navigation target found');
+                }
+            };
+
+            // Add multiple event types for better compatibility
+            newCard.addEventListener('click', clickHandler, { passive: false });
+            newCard.addEventListener('touchend', clickHandler, { passive: false });
+
+            // Add visual feedback for mobile
+            newCard.addEventListener('touchstart', (e) => {
+                console.log('Touch start on card');
+                newCard.style.transform = 'scale(0.98)';
+                newCard.style.backgroundColor = '#f8f9fa';
+                newCard.style.borderColor = '#3498db';
+            }, { passive: true });
+
+            newCard.addEventListener('touchend', (e) => {
+                console.log('Touch end on card');
+                setTimeout(() => {
+                    newCard.style.transform = '';
+                    newCard.style.backgroundColor = '';
+                    newCard.style.borderColor = '';
+                }, 200);
+            }, { passive: true });
+
+            // Add mouse events for desktop
+            newCard.addEventListener('mousedown', (e) => {
+                console.log('Mouse down on card');
+                newCard.style.transform = 'scale(0.98)';
+            }, { passive: true });
+
+            newCard.addEventListener('mouseup', (e) => {
+                console.log('Mouse up on card');
+                setTimeout(() => {
+                    newCard.style.transform = '';
+                }, 100);
+            }, { passive: true });
+        });
+
+        console.log('Dashboard card clicks setup complete');
+    }
+
+    navigateFromStatCard(section, filter = null) {
+        // Navigate to the specified section
+        this.showSection(section);
+
+        // Apply filters if specified
+        if (filter) {
+            switch (section) {
+                case 'members':
+                    if (filter === 'active') {
+                        // Filter to show only active members
+                        const statusFilter = document.getElementById('status-filter');
+                        if (statusFilter) {
+                            statusFilter.value = 'active';
+                            this.filterMembers();
+                        }
+                    }
+                    break;
+                case 'fees':
+                    if (filter === 'pending') {
+                        // Scroll to pending fees section
+                        setTimeout(() => {
+                            const pendingSection = document.querySelector('.pending-fees');
+                            if (pendingSection) {
+                                pendingSection.scrollIntoView({ behavior: 'smooth' });
+                            }
+                        }, 300);
+                    }
+                    break;
+            }
+        }
+
+        // Show success message
+        const sectionName = section.charAt(0).toUpperCase() + section.slice(1);
+        const filterText = filter ? ` (${filter})` : '';
+        this.showMessage(`Navigated to ${sectionName}${filterText}`, 'info');
     }
 
     // Dashboard Updates
@@ -656,6 +867,11 @@ class TTClubManager {
         document.getElementById('pending-payments').textContent = pendingPayments;
 
         this.renderRecentActivities();
+
+        // Setup dashboard card clicks after updating content with a delay
+        setTimeout(() => {
+            this.setupDashboardCardClicks();
+        }, 100);
 
         // Update expense and contribution summaries if on those sections
         if (document.getElementById('total-expenses')) {
@@ -1223,6 +1439,13 @@ class TTClubManager {
                 </div>
             </div>
         `).join('');
+
+        // Add mobile touch support for pending fee buttons
+        if (window.innerWidth <= 768) {
+            setTimeout(() => {
+                this.addCollectFeeButtonTouchSupport();
+            }, 100);
+        }
     }
 
     collectPendingFee(pendingId) {

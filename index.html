@@ -54,32 +54,44 @@
             <section id="dashboard" class="section active">
                 <h2>Dashboard</h2>
                 <div class="stats-grid">
-                    <div class="stat-card">
+                    <div class="stat-card clickable" data-navigate="members" title="View all members">
                         <i class="fas fa-users"></i>
                         <div class="stat-info">
                             <h3 id="total-members">0</h3>
                             <p>Total Members</p>
                         </div>
+                        <div class="stat-card-arrow">
+                            <i class="fas fa-chevron-right"></i>
+                        </div>
                     </div>
-                    <div class="stat-card">
+                    <div class="stat-card clickable" data-navigate="members" data-filter="active" title="View active members">
                         <i class="fas fa-user-check"></i>
                         <div class="stat-info">
                             <h3 id="active-members">0</h3>
                             <p>Active Members</p>
                         </div>
+                        <div class="stat-card-arrow">
+                            <i class="fas fa-chevron-right"></i>
+                        </div>
                     </div>
-                    <div class="stat-card">
+                    <div class="stat-card clickable" data-navigate="fees" title="View fee management">
                         <i class="fas fa-rupee-sign"></i>
                         <div class="stat-info">
                             <h3 id="total-collected">₹0</h3>
                             <p>Total Collected</p>
                         </div>
+                        <div class="stat-card-arrow">
+                            <i class="fas fa-chevron-right"></i>
+                        </div>
                     </div>
-                    <div class="stat-card">
+                    <div class="stat-card clickable" data-navigate="fees" data-filter="pending" title="View pending payments">
                         <i class="fas fa-exclamation-triangle"></i>
                         <div class="stat-info">
                             <h3 id="pending-payments">0</h3>
                             <p>Pending Payments</p>
+                        </div>
+                        <div class="stat-card-arrow">
+                            <i class="fas fa-chevron-right"></i>
                         </div>
                     </div>
                 </div>

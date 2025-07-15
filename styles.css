@@ -127,11 +127,50 @@ body {
     display: flex;
     align-items: center;
     gap: 1rem;
-    transition: transform 0.3s ease;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    position: relative;
 }
 
-.stat-card:hover {
+.stat-card.clickable {
+    cursor: pointer;
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+    pointer-events: auto;
+    z-index: 1;
+    position: relative;
+}
+
+.stat-card.clickable:hover {
     transform: translateY(-5px);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+}
+
+.stat-card.clickable:active {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0,0,0,0.12);
+}
+
+.stat-card-arrow {
+    margin-left: auto;
+    color: #bdc3c7;
+    font-size: 1.2rem;
+    transition: all 0.3s ease;
+}
+
+.stat-card.clickable:hover .stat-card-arrow {
+    color: #3498db;
+    transform: translateX(5px);
+}
+
+/* Ensure all child elements don't interfere with clicking */
+.stat-card.clickable * {
+    pointer-events: none;
+}
+
+.stat-card.clickable {
+    pointer-events: auto;
 }
 
 .stat-card i {
@@ -834,17 +873,46 @@ body {
     }
 
     .stat-card {
-        padding: 1rem;
+        padding: 1.25rem;
         flex-direction: row;
         align-items: center;
+        min-height: 80px;
+    }
+
+    .stat-card.clickable {
+        border: 2px solid transparent;
+        transition: all 0.3s ease;
+    }
+
+    .stat-card.clickable:active {
+        border-color: #3498db;
+        background: #f8f9fa;
+        transform: scale(0.98);
     }
 
     .stat-card i {
         font-size: 2rem;
+        min-width: 50px;
+    }
+
+    .stat-info {
+        flex: 1;
     }
 
     .stat-info h3 {
         font-size: 1.5rem;
+        margin-bottom: 0.25rem;
+    }
+
+    .stat-info p {
+        font-size: 0.85rem;
+        margin: 0;
+    }
+
+    .stat-card-arrow {
+        font-size: 1rem;
+        color: #95a5a6;
+        margin-left: 0.5rem;
     }
 
     /* Mobile Section Headers */
@@ -1091,6 +1159,53 @@ body {
         color: #495057;
         text-align: center;
         border: 1px solid #dee2e6;
+    }
+
+    /* Mobile pending fees section */
+    .pending-fees-header {
+        flex-direction: column;
+        gap: 1rem;
+        align-items: stretch;
+    }
+
+    .pending-fees-header h3 {
+        text-align: center;
+        margin-bottom: 0;
+    }
+
+    #add-pending-fee-btn {
+        width: 100%;
+        padding: 1rem;
+        font-size: 1rem;
+        font-weight: 600;
+        justify-content: center;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .pending-item {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 1rem;
+        padding: 1.5rem;
+    }
+
+    .pending-info {
+        text-align: center;
+    }
+
+    .pending-actions {
+        justify-content: center;
+        gap: 1rem;
+    }
+
+    .pending-actions .btn-small {
+        flex: 1;
+        max-width: 120px;
+        padding: 1rem 0.5rem;
+        font-size: 0.9rem;
+        font-weight: 600;
     }
 
     /* Mobile Buttons */
@@ -1534,7 +1649,7 @@ body {
         padding: 0.5rem 0.25rem;
     }
 
-    /* Specific mobile styles for collect fee buttons */
+    /* Specific mobile styles for action buttons */
     .btn-success {
         background: #28a745 !important;
         border: 2px solid #28a745 !important;
@@ -1545,6 +1660,32 @@ body {
     .btn-success:active {
         background: #1e7e34 !important;
         border-color: #1e7e34 !important;
+        transform: scale(0.95);
+    }
+
+    .btn-danger {
+        background: #dc3545 !important;
+        border: 2px solid #dc3545 !important;
+        color: white !important;
+        font-weight: 600;
+    }
+
+    .btn-danger:active {
+        background: #c82333 !important;
+        border-color: #c82333 !important;
+        transform: scale(0.95);
+    }
+
+    .btn-secondary {
+        background: #6c757d !important;
+        border: 2px solid #6c757d !important;
+        color: white !important;
+        font-weight: 600;
+    }
+
+    .btn-secondary:active {
+        background: #545b62 !important;
+        border-color: #545b62 !important;
         transform: scale(0.95);
     }
 
