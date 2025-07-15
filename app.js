@@ -1,48 +1,78 @@
 // Table Tennis Club Management System
 class TTClubManager {
     constructor() {
-        this.members = [];
-        this.transactions = [];
-        this.invoices = [];
-        this.activities = [];
-        this.settings = {};
+        // Initialize data directly from db.js
+        this.loadDataFromDB();
+
         this.currentEditingMember = null;
-        this.dataFile = null; // Will store the loaded JSON file reference
+        this.currentEditingExpense = null;
+        this.currentEditingContribution = null;
+        this.currentEditingFee = null;
         this.hasUnsavedChanges = false;
 
         this.initializeApp();
     }
 
-    // Data Management - JSON File Based (Client-side)
-    loadAllData() {
-        // Try to load from localStorage first (as cache)
-        const cachedData = this.loadFromLocalStorage('database');
-        if (cachedData) {
-            this.members = cachedData.members || [];
-            this.transactions = cachedData.transactions || [];
-            this.invoices = cachedData.invoices || [];
-            this.activities = cachedData.activities || [];
-            this.settings = cachedData.settings || this.getDefaultSettings();
-            return true;
+    // Data Management - Direct from db.js file
+    loadDataFromDB() {
+        console.log('Loading data from db.js file');
+        console.log('TTClubDatabase available:', typeof TTClubDatabase !== 'undefined');
+
+        // Load data directly from the global TTClubDatabase object
+        if (typeof TTClubDatabase !== 'undefined') {
+            console.log('TTClubDatabase found, loading data...');
+            console.log('TTClubDatabase.members length:', TTClubDatabase.members ? TTClubDatabase.members.length : 'undefined');
+
+            this.members = [...TTClubDatabase.members]; // Create copies to avoid direct mutation
+            this.transactions = [...TTClubDatabase.transactions];
+            this.invoices = [...TTClubDatabase.invoices];
+            this.activities = [...TTClubDatabase.activities];
+            this.expenses = [...TTClubDatabase.expenses];
+            this.contributions = [...TTClubDatabase.contributions];
+            this.pendingFees = [...TTClubDatabase.pendingFees];
+            this.feeYears = [...TTClubDatabase.feeYears];
+            this.settings = {...TTClubDatabase.settings};
+
+            console.log('Successfully loaded from db.js:', this.members.length, 'members');
         } else {
-            // Load initial data if no cache exists
-            this.loadInitialData();
-            return true;
+            console.error('TTClubDatabase not found! Make sure db.js is loaded before app.js');
+            console.log('Available global objects:', Object.keys(window));
+            this.initializeEmptyData();
         }
     }
 
-    saveAllData(autoDownload = false) {
-        const data = {
-            members: this.members,
-            transactions: this.transactions,
-            invoices: this.invoices,
-            activities: this.activities,
-            settings: this.settings,
-            lastUpdated: new Date().toISOString()
+    initializeEmptyData() {
+        this.members = [];
+        this.transactions = [];
+        this.invoices = [];
+        this.activities = [];
+        this.expenses = [];
+        this.contributions = [];
+        this.pendingFees = [];
+        this.feeYears = [];
+        this.settings = {
+            clubName: 'Passion Hills Table Tennis Club',
+            defaultMembershipFee: 3000,
+            defaultAnnualFee: 500,
+            currentYear: 2025
         };
+    }
 
-        // Save to localStorage as cache
-        this.saveToLocalStorage('database', data);
+    saveAllData(autoDownload = false) {
+        // Update the global database object
+        if (typeof TTClubDatabase !== 'undefined') {
+            TTClubDatabase.members = [...this.members];
+            TTClubDatabase.transactions = [...this.transactions];
+            TTClubDatabase.invoices = [...this.invoices];
+            TTClubDatabase.activities = [...this.activities];
+            TTClubDatabase.expenses = [...this.expenses];
+            TTClubDatabase.contributions = [...this.contributions];
+            TTClubDatabase.pendingFees = [...this.pendingFees];
+            TTClubDatabase.feeYears = [...this.feeYears];
+            TTClubDatabase.settings = {...this.settings};
+
+            console.log('Data saved to db.js structure');
+        }
 
         // Mark as saved
         this.hasUnsavedChanges = false;
@@ -53,90 +83,51 @@ class TTClubManager {
             this.downloadDatabaseJSON();
         }
 
-        // Show save indicator instead
+        // Show save indicator
         this.showSaveIndicator();
 
         return true;
     }
 
-    // Load initial data
-    loadInitialData() {
-        this.members = this.getInitialMembers();
-        this.transactions = this.getInitialTransactions();
-        this.invoices = [];
-        this.activities = [
-            {
-                id: Date.now(),
-                type: 'System',
-                description: 'Application initialized with sample data',
-                timestamp: new Date().toISOString()
-            }
-        ];
-        this.settings = this.getDefaultSettings();
-
-        // Save initial data
-        this.saveAllData();
+    // Reset to original database state
+    resetToOriginalData() {
+        if (confirm('This will reset all data to the original database state. Are you sure?')) {
+            // Reload the page to get fresh data from db.js
+            location.reload();
+        }
     }
 
-    // Storage methods
-    saveToLocalStorage(key, data) {
-        localStorage.setItem(`ttclub_${key}`, JSON.stringify(data));
-    }
 
-    loadFromLocalStorage(key) {
-        const data = localStorage.getItem(`ttclub_${key}`);
-        return data ? JSON.parse(data) : null;
-    }
-
-    getDefaultSettings() {
-        return {
-            clubName: 'Passion Hills Table Tennis Club',
-            defaultMembershipFee: 3000,
-            defaultAnnualFee: 500,
-            currentYear: 2025
-        };
-    }
-
-    getInitialTransactions() {
-        return [
-            {
-                id: 1704067200000,
-                memberId: 1,
-                memberName: 'PRAVEEN',
-                type: 'membership_fee',
-                amount: 3000,
-                date: '2023-01-01',
-                timestamp: '2023-01-01T00:00:00.000Z'
-            },
-            {
-                id: 1704067200001,
-                memberId: 1,
-                memberName: 'PRAVEEN',
-                type: 'annual_2023',
-                amount: 500,
-                date: '2023-03-01',
-                timestamp: '2023-03-01T00:00:00.000Z'
-            }
-        ];
-    }
 
     // Initialize the application
     initializeApp() {
-        this.showLoading();
+        try {
+            this.showLoading();
 
-        // Load data from JSON file
-        this.loadAllData();
+            // Data is already loaded in constructor via loadDataFromDB()
+            console.log('Initializing app with', this.members.length, 'members');
 
-        this.setupNavigation();
-        this.setupModals();
-        this.setupEventListeners();
-        this.setupMobileEnhancements();
-        this.updateDashboard();
-        this.renderMembers();
-        this.updateFeeManagement();
-        this.updateSaveStatus();
+            if (this.members.length === 0) {
+                console.error('No members loaded! Check db.js file.');
+                this.showMessage('Error: No member data found. Please check db.js file.', 'error');
+            }
 
-        this.hideLoading();
+            this.setupNavigation();
+            this.setupModals();
+            this.setupEventListeners();
+            this.setupMobileEnhancements();
+            this.updateDashboard();
+            this.renderMembers();
+            this.updateFeeManagement();
+            this.updateSaveStatus();
+
+            console.log('App initialization completed successfully');
+        } catch (error) {
+            console.error('Error during app initialization:', error);
+            this.showMessage('Error initializing application: ' + error.message, 'error');
+        } finally {
+            this.hideLoading();
+        }
     }
 
     // Mobile-specific enhancements
@@ -307,50 +298,7 @@ class TTClubManager {
         }, 2000);
     }
 
-    // Get initial members data
-    getInitialMembers() {
-        return [
-            {
-                id: 1,
-                name: 'PRAVEEN',
-                villaNo: '16',
-                status: 'FOUNDING MEMBER',
-                membershipFee: 3000,
-                annualFee2023: 500,
-                annualFee2024: 500,
-                annualFee2025: 0,
-                totalPaid: 4000,
-                joinDate: '2023-01-01',
-                isActive: true
-            },
-            {
-                id: 2,
-                name: 'JOSEPH',
-                villaNo: '20',
-                status: 'FOUNDING MEMBER',
-                membershipFee: 3000,
-                annualFee2023: 500,
-                annualFee2024: 500,
-                annualFee2025: 0,
-                totalPaid: 4000,
-                joinDate: '2023-01-01',
-                isActive: true
-            },
-            {
-                id: 3,
-                name: 'VARUN',
-                villaNo: '26',
-                status: 'NEW MEMBER',
-                membershipFee: 3000,
-                annualFee2023: 500,
-                annualFee2024: 500,
-                annualFee2025: 500,
-                totalPaid: 4500,
-                joinDate: '2023-06-01',
-                isActive: true
-            }
-        ];
-    }
+
 
     // Navigation Setup
     setupNavigation() {
@@ -389,6 +337,12 @@ class TTClubManager {
                 break;
             case 'invoices':
                 this.renderInvoices();
+                break;
+            case 'expenses':
+                this.renderExpenses();
+                break;
+            case 'contributions':
+                this.renderContributions();
                 break;
             case 'reports':
                 this.updateReports();
@@ -496,6 +450,98 @@ class TTClubManager {
             this.saveAllData(false);
             this.showMessage('Data saved successfully!', 'success');
         });
+
+        // Expense Management
+        document.getElementById('add-expense-btn').addEventListener('click', () => {
+            this.openExpenseModal();
+        });
+
+        document.getElementById('expense-form').addEventListener('submit', (e) => {
+            e.preventDefault();
+            this.saveExpense();
+        });
+
+        document.getElementById('cancel-expense').addEventListener('click', () => {
+            document.getElementById('expense-modal').style.display = 'none';
+        });
+
+        // Contribution Management
+        document.getElementById('add-contribution-btn').addEventListener('click', () => {
+            this.openContributionModal();
+        });
+
+        document.getElementById('contribution-form').addEventListener('submit', (e) => {
+            e.preventDefault();
+            this.saveContribution();
+        });
+
+        document.getElementById('cancel-contribution').addEventListener('click', () => {
+            document.getElementById('contribution-modal').style.display = 'none';
+        });
+
+        // Search and Filter Events
+        document.getElementById('expense-search').addEventListener('input', () => {
+            this.filterExpenses();
+        });
+
+        document.getElementById('expense-category-filter').addEventListener('change', () => {
+            this.filterExpenses();
+        });
+
+        document.getElementById('expense-status-filter').addEventListener('change', () => {
+            this.filterExpenses();
+        });
+
+        document.getElementById('contribution-search').addEventListener('input', () => {
+            this.filterContributions();
+        });
+
+        document.getElementById('contribution-type-filter').addEventListener('change', () => {
+            this.filterContributions();
+        });
+
+        // Reset Data Button
+        document.getElementById('reset-data').addEventListener('click', () => {
+            this.resetToOriginalData();
+        });
+
+        // Pending Fee Management
+        document.getElementById('add-pending-fee-btn').addEventListener('click', () => {
+            this.openPendingFeeModal();
+        });
+
+        document.getElementById('pending-fee-form').addEventListener('submit', (e) => {
+            e.preventDefault();
+            this.savePendingFee();
+        });
+
+        document.getElementById('cancel-pending-fee').addEventListener('click', () => {
+            document.getElementById('pending-fee-modal').style.display = 'none';
+        });
+
+        // Fee Years Management
+        document.getElementById('manage-fee-years-btn').addEventListener('click', () => {
+            this.openFeeYearsModal();
+        });
+
+        document.getElementById('add-fee-year-form').addEventListener('submit', (e) => {
+            e.preventDefault();
+            this.addFeeYear();
+        });
+
+        document.getElementById('cancel-fee-year').addEventListener('click', () => {
+            document.getElementById('fee-years-modal').style.display = 'none';
+        });
+
+        // Edit Member Fee
+        document.getElementById('edit-member-fee-form').addEventListener('submit', (e) => {
+            e.preventDefault();
+            this.updateMemberFee();
+        });
+
+        document.getElementById('cancel-edit-fee').addEventListener('click', () => {
+            document.getElementById('edit-member-fee-modal').style.display = 'none';
+        });
     }
 
     // Dashboard Updates
@@ -503,14 +549,25 @@ class TTClubManager {
         const totalMembers = this.members.length;
         const activeMembers = this.members.filter(m => m.isActive).length;
         const totalCollected = this.members.reduce((sum, m) => sum + m.totalPaid, 0);
+        const totalContributions = this.contributions.reduce((sum, c) => sum + c.amount, 0);
+        const totalExpenses = this.expenses.reduce((sum, e) => sum + e.amount, 0);
+        const netBalance = totalCollected + totalContributions - totalExpenses;
         const pendingPayments = this.calculatePendingPayments();
 
         document.getElementById('total-members').textContent = totalMembers;
         document.getElementById('active-members').textContent = activeMembers;
-        document.getElementById('total-collected').textContent = `₹${totalCollected.toLocaleString()}`;
+        document.getElementById('total-collected').textContent = `₹${(totalCollected + totalContributions).toLocaleString()}`;
         document.getElementById('pending-payments').textContent = pendingPayments;
 
         this.renderRecentActivities();
+
+        // Update expense and contribution summaries if on those sections
+        if (document.getElementById('total-expenses')) {
+            this.updateExpenseSummary();
+        }
+        if (document.getElementById('total-contributions')) {
+            this.updateContributionSummary();
+        }
     }
 
     calculatePendingPayments() {
@@ -618,41 +675,136 @@ class TTClubManager {
     }
 
     renderMembers() {
+        const thead = document.getElementById('members-table-header');
         const tbody = document.getElementById('members-table-body');
         const filteredMembers = this.getFilteredMembers();
-        
-        tbody.innerHTML = filteredMembers.map((member, index) => `
+
+        console.log('Rendering members:', filteredMembers.length, 'members');
+
+        // Render dynamic headers
+        this.renderMembersTableHeader(thead);
+
+        if (filteredMembers.length === 0) {
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="10" style="text-align: center; padding: 2rem; color: #7f8c8d;">
+                        <i class="fas fa-users" style="font-size: 2rem; margin-bottom: 1rem; display: block;"></i>
+                        No members found. ${this.members.length === 0 ? 'Add your first member!' : 'Try adjusting your search or filters.'}
+                    </td>
+                </tr>
+            `;
+            return;
+        }
+
+        tbody.innerHTML = filteredMembers.map((member, index) => {
+            const isFoundingMember = member.status.includes('FOUNDING MEMBER');
+            const isInactive = member.status.includes('Inactive') || !member.isActive;
+            const rowClass = isFoundingMember ? 'founding-member-row' : '';
+            const inactiveClass = isInactive ? 'inactive-member' : '';
+
+            return `
+                <tr class="${rowClass} ${inactiveClass}" data-member-id="${member.id}">
+                    <td>${index + 1}</td>
+                    <td>
+                        <div class="member-name">
+                            ${isFoundingMember ? '<i class="fas fa-crown founding-icon" title="Founding Member"></i>' : ''}
+                            ${member.name}
+                            ${isInactive ? '<i class="fas fa-pause-circle inactive-icon" title="Inactive Member"></i>' : ''}
+                        </div>
+                    </td>
+                    <td>${member.villaNo}</td>
+                    <td><span class="status-badge status-${member.status.toLowerCase().replace(/\s+/g, '-').replace(/[()]/g, '')}">${member.status}</span></td>
+                    <td>₹${member.membershipFee.toLocaleString()}</td>
+                    ${this.feeYears.sort((a, b) => a.year - b.year).map(feeYear => {
+                        const feeKey = `annualFee${feeYear.year}`;
+                        const feeAmount = member[feeKey] || 0;
+                        return `
+                            <td class="${feeAmount === 0 ? 'unpaid-fee' : 'paid-fee'} fee-cell">
+                                <div class="fee-amount-container">
+                                    <span class="fee-amount">₹${feeAmount.toLocaleString()}</span>
+                                    <button class="btn-edit-fee" onclick="ttClub.editMemberFee(${member.id}, ${feeYear.year}, ${feeAmount})" title="Edit ${feeYear.year} fee">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        `;
+                    }).join('')}
+                    <td class="total-paid">₹${member.totalPaid.toLocaleString()}</td>
+                    <td class="action-buttons">
+                        <button class="btn btn-small btn-primary" onclick="ttClub.openMemberModal(${JSON.stringify(member).replace(/"/g, '&quot;')})" title="Edit Member">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="btn btn-small btn-danger" onclick="ttClub.deleteMember(${member.id})" title="Delete Member">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                        ${member.annualFee2023 === 0 || member.annualFee2024 === 0 || member.annualFee2025 === 0 ?
+                            `<button class="btn btn-small btn-success" onclick="ttClub.openFeeModal('${member.id}')" title="Collect Fee">
+                                <i class="fas fa-money-bill-wave"></i>
+                            </button>` : ''
+                        }
+                    </td>
+                </tr>
+            `;
+        }).join('');
+
+        // Update member count display
+        this.updateMemberCount(filteredMembers.length);
+    }
+
+    renderMembersTableHeader(thead) {
+        const sortedFeeYears = this.feeYears.sort((a, b) => a.year - b.year);
+
+        thead.innerHTML = `
             <tr>
-                <td>${index + 1}</td>
-                <td>${member.name}</td>
-                <td>${member.villaNo}</td>
-                <td><span class="status-badge status-${member.status.toLowerCase().replace(/\s+/g, '-')}">${member.status}</span></td>
-                <td>₹${member.membershipFee.toLocaleString()}</td>
-                <td>₹${member.annualFee2023.toLocaleString()}</td>
-                <td>₹${member.annualFee2024.toLocaleString()}</td>
-                <td>₹${member.annualFee2025.toLocaleString()}</td>
-                <td>₹${member.totalPaid.toLocaleString()}</td>
-                <td class="action-buttons">
-                    <button class="btn btn-small btn-primary" onclick="ttClub.openMemberModal(${JSON.stringify(member).replace(/"/g, '&quot;')})">
-                        <i class="fas fa-edit"></i>
-                    </button>
-                    <button class="btn btn-small btn-danger" onclick="ttClub.deleteMember(${member.id})">
-                        <i class="fas fa-trash"></i>
-                    </button>
-                </td>
+                <th>Sl No</th>
+                <th>Name</th>
+                <th>Villa No</th>
+                <th>Status</th>
+                <th>Membership Fee</th>
+                ${sortedFeeYears.map(feeYear =>
+                    `<th>Annual Fee ${feeYear.year}</th>`
+                ).join('')}
+                <th>Total Paid</th>
+                <th>Actions</th>
             </tr>
-        `).join('');
+        `;
+    }
+
+    updateMemberCount(count) {
+        // Add member count to section header if it doesn't exist
+        const sectionHeader = document.querySelector('#members .section-header h2');
+        if (sectionHeader) {
+            const totalMembers = this.members.length;
+            const foundingMembers = this.members.filter(m => m.status.includes('FOUNDING MEMBER')).length;
+            sectionHeader.innerHTML = `
+                Member Management
+                <small style="font-weight: normal; color: #7f8c8d; font-size: 0.7em;">
+                    (${count} of ${totalMembers} shown • ${foundingMembers} founding members)
+                </small>
+            `;
+        }
     }
 
     getFilteredMembers() {
-        const searchTerm = document.getElementById('member-search').value.toLowerCase();
-        const statusFilter = document.getElementById('status-filter').value;
-        
+        // Get search and filter values with null checks
+        const searchElement = document.getElementById('member-search');
+        const statusElement = document.getElementById('status-filter');
+
+        const searchTerm = searchElement ? searchElement.value.toLowerCase() : '';
+        const statusFilter = statusElement ? statusElement.value : '';
+
+        console.log('Filtering members:', {
+            totalMembers: this.members.length,
+            searchTerm,
+            statusFilter
+        });
+
         return this.members.filter(member => {
-            const matchesSearch = member.name.toLowerCase().includes(searchTerm) || 
+            const matchesSearch = !searchTerm ||
+                                member.name.toLowerCase().includes(searchTerm) ||
                                 member.villaNo.toLowerCase().includes(searchTerm);
             const matchesStatus = !statusFilter || member.status === statusFilter;
-            
+
             return matchesSearch && matchesStatus;
         });
     }
@@ -745,15 +897,30 @@ class TTClubManager {
     }
 
     // Fee Management
-    openFeeModal() {
+    openFeeModal(memberId = null) {
         const modal = document.getElementById('fee-modal');
         const memberSelect = document.getElementById('fee-member');
+        const feeTypeSelect = document.getElementById('fee-type');
 
         // Populate member dropdown
         memberSelect.innerHTML = '<option value="">Select Member</option>' +
             this.members.map(member =>
                 `<option value="${member.id}">${member.name} (Villa ${member.villaNo})</option>`
             ).join('');
+
+        // Populate fee type dropdown with active fee years
+        const activeFeeYears = this.feeYears.filter(fy => fy.isActive).sort((a, b) => a.year - b.year);
+        feeTypeSelect.innerHTML = '<option value="">Select Fee Type</option>' +
+            activeFeeYears.map(feeYear =>
+                `<option value="annual_${feeYear.year}">Annual Fee ${feeYear.year} (₹${feeYear.amount})</option>`
+            ).join('');
+
+        // Pre-select member if provided
+        if (memberId) {
+            memberSelect.value = memberId;
+            // Trigger change event to update fee amount if needed
+            memberSelect.dispatchEvent(new Event('change'));
+        }
 
         // Set default date to today
         document.getElementById('payment-date').value = new Date().toISOString().split('T')[0];
@@ -770,21 +937,19 @@ class TTClubManager {
         const member = this.members.find(m => m.id === memberId);
         if (!member) return;
 
-        // Update member's fee record
-        switch(feeType) {
-            case 'annual_2023':
-                member.annualFee2023 = amount;
-                break;
-            case 'annual_2024':
-                member.annualFee2024 = amount;
-                break;
-            case 'annual_2025':
-                member.annualFee2025 = amount;
-                break;
+        // Update member's fee record dynamically
+        if (feeType.startsWith('annual_')) {
+            const year = feeType.replace('annual_', '');
+            const feeKey = `annualFee${year}`;
+            member[feeKey] = amount;
         }
 
-        // Update total paid
-        member.totalPaid = member.membershipFee + member.annualFee2023 + member.annualFee2024 + member.annualFee2025;
+        // Update total paid by summing all fee years
+        member.totalPaid = member.membershipFee +
+                          this.feeYears.reduce((sum, feeYear) => {
+                              const feeKey = `annualFee${feeYear.year}`;
+                              return sum + (member[feeKey] || 0);
+                          }, 0);
 
         // Record transaction
         const transaction = {
@@ -837,57 +1002,215 @@ class TTClubManager {
         this.renderPendingFees();
     }
 
-    renderPendingFees() {
-        const pendingList = document.getElementById('pending-fees-list');
-        const pendingFees = [];
+    // Pending Fee Management Methods
+    openPendingFeeModal() {
+        const modal = document.getElementById('pending-fee-modal');
+        const memberSelect = document.getElementById('pending-fee-member');
+        const feeTypeSelect = document.getElementById('pending-fee-type');
 
-        this.members.forEach(member => {
-            if (member.annualFee2023 === 0) {
-                pendingFees.push({
-                    member: member,
-                    feeType: 'Annual Fee 2023',
-                    amount: 500
-                });
-            }
-            if (member.annualFee2024 === 0) {
-                pendingFees.push({
-                    member: member,
-                    feeType: 'Annual Fee 2024',
-                    amount: 500
-                });
-            }
-            if (member.annualFee2025 === 0) {
-                pendingFees.push({
-                    member: member,
-                    feeType: 'Annual Fee 2025',
-                    amount: 500
-                });
-            }
-        });
+        // Populate member dropdown
+        memberSelect.innerHTML = '<option value="">Select Member</option>' +
+            this.members.map(member =>
+                `<option value="${member.id}">${member.name} (Villa ${member.villaNo})</option>`
+            ).join('');
 
-        if (pendingFees.length === 0) {
-            pendingList.innerHTML = '<p>No pending fees!</p>';
+        // Populate fee type dropdown with active fee years
+        const activeFeeYears = this.feeYears.filter(fy => fy.isActive).sort((a, b) => a.year - b.year);
+        feeTypeSelect.innerHTML = '<option value="">Select Fee Type</option>' +
+            activeFeeYears.map(feeYear =>
+                `<option value="Annual Fee ${feeYear.year}">Annual Fee ${feeYear.year} (₹${feeYear.amount})</option>`
+            ).join('') +
+            `<option value="Membership Fee">Membership Fee</option>
+             <option value="Special Assessment">Special Assessment</option>
+             <option value="Tournament Fee">Tournament Fee</option>
+             <option value="Other">Other</option>`;
+
+        // Set default due date to 30 days from now
+        const dueDate = new Date();
+        dueDate.setDate(dueDate.getDate() + 30);
+        document.getElementById('pending-fee-due-date').value = dueDate.toISOString().split('T')[0];
+
+        modal.style.display = 'block';
+    }
+
+    savePendingFee() {
+        const memberId = parseInt(document.getElementById('pending-fee-member').value);
+        const feeType = document.getElementById('pending-fee-type').value;
+        const amount = parseInt(document.getElementById('pending-fee-amount').value);
+        const dueDate = document.getElementById('pending-fee-due-date').value;
+        const notes = document.getElementById('pending-fee-notes').value;
+
+        const member = this.members.find(m => m.id === memberId);
+        if (!member) {
+            this.showMessage('Member not found!', 'error');
             return;
         }
 
-        pendingList.innerHTML = pendingFees.map(pending => `
+        // Check if this pending fee already exists
+        const existingPending = this.pendingFees.find(pf =>
+            pf.memberId === memberId && pf.feeType === feeType
+        );
+
+        if (existingPending) {
+            this.showMessage('A pending fee of this type already exists for this member!', 'error');
+            return;
+        }
+
+        const newPendingFee = {
+            id: Date.now(),
+            memberId: memberId,
+            memberName: member.name,
+            memberVilla: member.villaNo,
+            feeType: feeType,
+            amount: amount,
+            dueDate: dueDate,
+            notes: notes,
+            status: 'Pending',
+            createdDate: new Date().toISOString().split('T')[0],
+            timestamp: new Date().toISOString()
+        };
+
+        this.pendingFees.push(newPendingFee);
+        this.markDataChanged();
+        this.saveAllData();
+
+        this.addActivity('Pending Fee Added', `Added pending ${feeType} ₹${amount} for ${member.name}`);
+        this.renderPendingFees();
+        this.showMessage(`Pending fee added for ${member.name}`, 'success');
+
+        document.getElementById('pending-fee-modal').style.display = 'none';
+        document.getElementById('pending-fee-form').reset();
+    }
+
+    renderPendingFees() {
+        const pendingList = document.getElementById('pending-fees-list');
+        if (!pendingList) {
+            console.error('Pending fees list element not found');
+            return;
+        }
+
+        if (this.pendingFees.length === 0) {
+            pendingList.innerHTML = '<p class="empty-state">No pending fees added. Click "Add Pending Fee" to create pending fee records.</p>';
+            return;
+        }
+
+        pendingList.innerHTML = this.pendingFees.map(pending => `
             <div class="pending-item">
-                <div>
-                    <strong>${pending.member.name}</strong> (Villa ${pending.member.villaNo})
-                    <br><small>${pending.feeType} - ₹${pending.amount}</small>
+                <div class="pending-info">
+                    <strong>${pending.memberName}</strong> (Villa ${pending.memberVilla})
+                    <br><small>${pending.feeType} - ₹${pending.amount.toLocaleString()}</small>
+                    <br><small>Due: ${new Date(pending.dueDate).toLocaleDateString()}</small>
+                    ${pending.notes ? `<br><small class="notes">Note: ${pending.notes}</small>` : ''}
                 </div>
-                <button class="btn btn-small btn-success" onclick="ttClub.quickCollectFee(${pending.member.id}, '${pending.feeType}', ${pending.amount})">
-                    Collect
-                </button>
+                <div class="pending-actions">
+                    <button class="btn btn-small btn-success" onclick="ttClub.collectPendingFee(${pending.id})" title="Collect Fee">
+                        <i class="fas fa-money-bill-wave"></i> Collect
+                    </button>
+                    <button class="btn btn-small btn-danger" onclick="ttClub.deletePendingFee(${pending.id})" title="Remove Pending Fee">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
             </div>
         `).join('');
     }
 
+    collectPendingFee(pendingId) {
+        const pending = this.pendingFees.find(pf => pf.id === pendingId);
+        if (!pending) {
+            this.showMessage('Pending fee not found!', 'error');
+            return;
+        }
+
+        const member = this.members.find(m => m.id === pending.memberId);
+        if (!member) {
+            this.showMessage('Member not found!', 'error');
+            return;
+        }
+
+        // Update member's fee record based on fee type
+        if (pending.feeType === 'Annual Fee 2023') {
+            member.annualFee2023 = pending.amount;
+        } else if (pending.feeType === 'Annual Fee 2024') {
+            member.annualFee2024 = pending.amount;
+        } else if (pending.feeType === 'Annual Fee 2025') {
+            member.annualFee2025 = pending.amount;
+        } else if (pending.feeType === 'Membership Fee') {
+            member.membershipFee += pending.amount;
+        }
+
+        // Update total paid
+        member.totalPaid = member.membershipFee + member.annualFee2023 + member.annualFee2024 + member.annualFee2025;
+
+        // Record transaction
+        const transaction = {
+            id: Date.now(),
+            memberId: member.id,
+            memberName: member.name,
+            type: pending.feeType.toLowerCase().replace(/\s+/g, '_'),
+            amount: pending.amount,
+            date: new Date().toISOString().split('T')[0],
+            timestamp: new Date().toISOString(),
+            fromPending: true,
+            pendingFeeId: pendingId
+        };
+
+        this.transactions.push(transaction);
+
+        // Remove from pending fees
+        this.pendingFees = this.pendingFees.filter(pf => pf.id !== pendingId);
+
+        this.markDataChanged();
+        this.saveAllData();
+
+        this.addActivity('Pending Fee Collected', `Collected ${pending.feeType} ₹${pending.amount} from ${member.name}`);
+
+        this.updateDashboard();
+        this.renderMembers();
+        this.renderPendingFees();
+
+        this.showMessage(`Successfully collected ${pending.feeType} ₹${pending.amount} from ${member.name}`, 'success');
+    }
+
+    deletePendingFee(pendingId) {
+        const pending = this.pendingFees.find(pf => pf.id === pendingId);
+        if (!pending) {
+            this.showMessage('Pending fee not found!', 'error');
+            return;
+        }
+
+        if (confirm(`Are you sure you want to remove the pending ${pending.feeType} for ${pending.memberName}?`)) {
+            this.pendingFees = this.pendingFees.filter(pf => pf.id !== pendingId);
+            this.markDataChanged();
+            this.saveAllData();
+
+            this.addActivity('Pending Fee Removed', `Removed pending ${pending.feeType} for ${pending.memberName}`);
+            this.renderPendingFees();
+            this.showMessage('Pending fee removed successfully', 'success');
+        }
+    }
+
     quickCollectFee(memberId, feeType, amount) {
         const member = this.members.find(m => m.id === memberId);
-        if (!member) return;
+        if (!member) {
+            console.error('Member not found:', memberId);
+            this.showMessage('Member not found!', 'error');
+            return;
+        }
 
-        const feeTypeKey = feeType.toLowerCase().replace('annual fee ', 'annual_');
+        console.log('Quick collecting fee:', { memberId, feeType, amount, member });
+
+        // Convert fee type to the correct format
+        let feeTypeKey;
+        if (feeType === 'Annual Fee 2023') {
+            feeTypeKey = 'annual_2023';
+        } else if (feeType === 'Annual Fee 2024') {
+            feeTypeKey = 'annual_2024';
+        } else if (feeType === 'Annual Fee 2025') {
+            feeTypeKey = 'annual_2025';
+        } else {
+            // Fallback to the old method
+            feeTypeKey = feeType.toLowerCase().replace('annual fee ', 'annual_');
+        }
 
         switch(feeTypeKey) {
             case 'annual_2023':
@@ -914,14 +1237,16 @@ class TTClubManager {
         };
 
         this.transactions.push(transaction);
-        this.saveData('members', this.members);
-        this.saveData('transactions', this.transactions);
+        this.markDataChanged();
+        this.saveAllData();
 
         this.addActivity('Fee Collected', `Quick collected ${feeType} ₹${amount} from ${member.name}`);
 
         this.updateDashboard();
         this.updateFeeManagement();
         this.renderMembers();
+
+        this.showMessage(`Successfully collected ${feeType} ₹${amount} from ${member.name}`, 'success');
     }
 
     // Invoice Management
@@ -1080,7 +1405,12 @@ class TTClubManager {
         const totalAnnualFees2023 = this.members.reduce((sum, m) => sum + m.annualFee2023, 0);
         const totalAnnualFees2024 = this.members.reduce((sum, m) => sum + m.annualFee2024, 0);
         const totalAnnualFees2025 = this.members.reduce((sum, m) => sum + m.annualFee2025, 0);
-        const totalCollected = totalMembershipFees + totalAnnualFees2023 + totalAnnualFees2024 + totalAnnualFees2025;
+        const totalMemberFees = totalMembershipFees + totalAnnualFees2023 + totalAnnualFees2024 + totalAnnualFees2025;
+
+        const totalContributions = this.contributions.reduce((sum, c) => sum + c.amount, 0);
+        const totalExpenses = this.expenses.reduce((sum, e) => sum + e.amount, 0);
+        const totalIncome = totalMemberFees + totalContributions;
+        const netBalance = totalIncome - totalExpenses;
 
         const pendingAmount = this.calculateTotalPendingAmount();
 
@@ -1097,11 +1427,20 @@ class TTClubManager {
             <div class="financial-item">
                 <strong>Annual Fees 2025:</strong> ₹${totalAnnualFees2025.toLocaleString()}
             </div>
+            <div class="financial-item">
+                <strong>Total Contributions:</strong> ₹${totalContributions.toLocaleString()}
+            </div>
             <div class="financial-item total-line">
-                <strong>Total Collected:</strong> ₹${totalCollected.toLocaleString()}
+                <strong>Total Income:</strong> ₹${totalIncome.toLocaleString()}
+            </div>
+            <div class="financial-item">
+                <strong>Total Expenses:</strong> ₹${totalExpenses.toLocaleString()}
+            </div>
+            <div class="financial-item ${netBalance >= 0 ? 'total-line' : 'pending-line'}">
+                <strong>Net Balance:</strong> ₹${netBalance.toLocaleString()}
             </div>
             <div class="financial-item pending-line">
-                <strong>Pending Amount:</strong> ₹${pendingAmount.toLocaleString()}
+                <strong>Pending Fees:</strong> ₹${pendingAmount.toLocaleString()}
             </div>
         `;
     }
@@ -1221,9 +1560,13 @@ class TTClubManager {
             transactions: this.transactions,
             invoices: this.invoices,
             activities: this.activities,
+            expenses: this.expenses,
+            contributions: this.contributions,
+            pendingFees: this.pendingFees,
+            feeYears: this.feeYears,
             settings: this.settings,
             exportDate: new Date().toISOString(),
-            version: '1.0'
+            version: '2.0'
         };
 
         const jsonContent = JSON.stringify(data, null, 2);
@@ -1244,6 +1587,599 @@ class TTClubManager {
         this.addActivity('Data Export', 'Downloaded complete database JSON');
     }
 
+    // Fee Years Management Methods
+    openFeeYearsModal() {
+        const modal = document.getElementById('fee-years-modal');
+        const currentYear = new Date().getFullYear();
+
+        // Set default year to next year
+        document.getElementById('new-fee-year').value = currentYear + 1;
+
+        this.renderCurrentFeeYears();
+        modal.style.display = 'block';
+    }
+
+    renderCurrentFeeYears() {
+        const container = document.getElementById('current-fee-years');
+
+        if (this.feeYears.length === 0) {
+            container.innerHTML = '<p class="empty-state">No fee years configured.</p>';
+            return;
+        }
+
+        // Sort fee years by year
+        const sortedYears = [...this.feeYears].sort((a, b) => a.year - b.year);
+
+        container.innerHTML = sortedYears.map(feeYear => `
+            <div class="fee-year-item ${!feeYear.isActive ? 'inactive' : ''}">
+                <div class="fee-year-info">
+                    <strong>${feeYear.year}</strong>
+                    <span class="fee-amount">₹${feeYear.amount.toLocaleString()}</span>
+                    ${feeYear.description ? `<small>${feeYear.description}</small>` : ''}
+                </div>
+                <div class="fee-year-actions">
+                    <button class="btn btn-small ${feeYear.isActive ? 'btn-warning' : 'btn-success'}"
+                            onclick="ttClub.toggleFeeYear(${feeYear.year})"
+                            title="${feeYear.isActive ? 'Deactivate' : 'Activate'} this fee year">
+                        <i class="fas fa-${feeYear.isActive ? 'pause' : 'play'}"></i>
+                    </button>
+                    <button class="btn btn-small btn-primary"
+                            onclick="ttClub.editFeeYear(${feeYear.year})"
+                            title="Edit fee year">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                    <button class="btn btn-small btn-danger"
+                            onclick="ttClub.deleteFeeYear(${feeYear.year})"
+                            title="Delete fee year">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    addFeeYear() {
+        const year = parseInt(document.getElementById('new-fee-year').value);
+        const amount = parseInt(document.getElementById('new-fee-amount').value);
+        const description = document.getElementById('fee-year-description').value || `Annual Fee ${year}`;
+
+        // Check if year already exists
+        const existingYear = this.feeYears.find(fy => fy.year === year);
+        if (existingYear) {
+            this.showMessage(`Fee year ${year} already exists!`, 'error');
+            return;
+        }
+
+        // Add new fee year
+        const newFeeYear = {
+            year: year,
+            amount: amount,
+            description: description,
+            isActive: true
+        };
+
+        this.feeYears.push(newFeeYear);
+
+        // Add the new fee year columns to all existing members
+        this.members.forEach(member => {
+            const feeKey = `annualFee${year}`;
+            if (!(feeKey in member)) {
+                member[feeKey] = 0; // Initialize with 0 (unpaid)
+            }
+        });
+
+        this.markDataChanged();
+        this.saveAllData();
+
+        this.addActivity('Fee Year Added', `Added fee year ${year} with amount ₹${amount}`);
+        this.showMessage(`Fee year ${year} added successfully!`, 'success');
+
+        // Refresh displays
+        this.renderCurrentFeeYears();
+        this.updateFeeManagement();
+        this.renderMembers();
+
+        // Reset form
+        document.getElementById('add-fee-year-form').reset();
+        document.getElementById('new-fee-year').value = new Date().getFullYear() + 1;
+    }
+
+    toggleFeeYear(year) {
+        const feeYear = this.feeYears.find(fy => fy.year === year);
+        if (!feeYear) return;
+
+        feeYear.isActive = !feeYear.isActive;
+
+        this.markDataChanged();
+        this.saveAllData();
+
+        this.addActivity('Fee Year Updated', `${feeYear.isActive ? 'Activated' : 'Deactivated'} fee year ${year}`);
+        this.showMessage(`Fee year ${year} ${feeYear.isActive ? 'activated' : 'deactivated'}`, 'success');
+
+        this.renderCurrentFeeYears();
+        this.updateFeeManagement();
+    }
+
+    editFeeYear(year) {
+        const feeYear = this.feeYears.find(fy => fy.year === year);
+        if (!feeYear) return;
+
+        const newAmount = prompt(`Enter new amount for ${year}:`, feeYear.amount);
+        if (newAmount === null) return; // User cancelled
+
+        const amount = parseInt(newAmount);
+        if (isNaN(amount) || amount < 0) {
+            this.showMessage('Please enter a valid amount', 'error');
+            return;
+        }
+
+        const newDescription = prompt(`Enter description for ${year}:`, feeYear.description);
+        if (newDescription === null) return; // User cancelled
+
+        feeYear.amount = amount;
+        feeYear.description = newDescription;
+
+        this.markDataChanged();
+        this.saveAllData();
+
+        this.addActivity('Fee Year Updated', `Updated fee year ${year}: ₹${amount} - ${newDescription}`);
+        this.showMessage(`Fee year ${year} updated successfully!`, 'success');
+
+        this.renderCurrentFeeYears();
+    }
+
+    deleteFeeYear(year) {
+        const feeYear = this.feeYears.find(fy => fy.year === year);
+        if (!feeYear) return;
+
+        // Check if any member has paid this fee
+        const feeKey = `annualFee${year}`;
+        const hasPaidMembers = this.members.some(member => member[feeKey] > 0);
+
+        if (hasPaidMembers) {
+            if (!confirm(`Some members have already paid fees for ${year}. Deleting this fee year will remove all payment records for this year. Are you sure?`)) {
+                return;
+            }
+        } else {
+            if (!confirm(`Are you sure you want to delete fee year ${year}?`)) {
+                return;
+            }
+        }
+
+        // Remove fee year
+        this.feeYears = this.feeYears.filter(fy => fy.year !== year);
+
+        // Remove fee year data from all members
+        this.members.forEach(member => {
+            delete member[feeKey];
+            // Recalculate total paid
+            member.totalPaid = member.membershipFee +
+                              this.feeYears.reduce((sum, fy) => {
+                                  const key = `annualFee${fy.year}`;
+                                  return sum + (member[key] || 0);
+                              }, 0);
+        });
+
+        // Remove related transactions
+        this.transactions = this.transactions.filter(t => t.type !== `annual_${year}`);
+
+        this.markDataChanged();
+        this.saveAllData();
+
+        this.addActivity('Fee Year Deleted', `Deleted fee year ${year}`);
+        this.showMessage(`Fee year ${year} deleted successfully!`, 'success');
+
+        // Refresh displays
+        this.renderCurrentFeeYears();
+        this.updateFeeManagement();
+        this.renderMembers();
+    }
+
+    // Member Fee Editing Methods
+    editMemberFee(memberId, year, currentAmount) {
+        const member = this.members.find(m => m.id === memberId);
+        if (!member) {
+            this.showMessage('Member not found!', 'error');
+            return;
+        }
+
+        const modal = document.getElementById('edit-member-fee-modal');
+
+        // Store current editing context
+        this.currentEditingFee = {
+            memberId: memberId,
+            year: year,
+            currentAmount: currentAmount
+        };
+
+        // Populate modal with member and fee information
+        document.getElementById('edit-fee-member-name').textContent = `${member.name} (Villa ${member.villaNo})`;
+        document.getElementById('edit-fee-year').textContent = year;
+        document.getElementById('edit-fee-current-amount').textContent = currentAmount.toLocaleString();
+        document.getElementById('edit-fee-new-amount').value = currentAmount;
+
+        // Reset form
+        document.getElementById('edit-fee-reason').value = '';
+        document.getElementById('edit-fee-notes').value = '';
+
+        modal.style.display = 'block';
+    }
+
+    updateMemberFee() {
+        if (!this.currentEditingFee) {
+            this.showMessage('No fee editing context found!', 'error');
+            return;
+        }
+
+        const { memberId, year } = this.currentEditingFee;
+        const newAmount = parseInt(document.getElementById('edit-fee-new-amount').value);
+        const reason = document.getElementById('edit-fee-reason').value;
+        const notes = document.getElementById('edit-fee-notes').value;
+
+        if (newAmount < 0) {
+            this.showMessage('Fee amount cannot be negative!', 'error');
+            return;
+        }
+
+        const member = this.members.find(m => m.id === memberId);
+        if (!member) {
+            this.showMessage('Member not found!', 'error');
+            return;
+        }
+
+        // Update member's fee record
+        const feeKey = `annualFee${year}`;
+        const oldAmount = member[feeKey] || 0;
+        member[feeKey] = newAmount;
+
+        // Recalculate total paid
+        member.totalPaid = member.membershipFee +
+                          this.feeYears.reduce((sum, feeYear) => {
+                              const key = `annualFee${feeYear.year}`;
+                              return sum + (member[key] || 0);
+                          }, 0);
+
+        // Create adjustment transaction record
+        const adjustmentTransaction = {
+            id: Date.now(),
+            memberId: member.id,
+            memberName: member.name,
+            type: `fee_adjustment_${year}`,
+            amount: newAmount - oldAmount, // Can be negative for reductions
+            date: new Date().toISOString().split('T')[0],
+            timestamp: new Date().toISOString(),
+            isAdjustment: true,
+            adjustmentReason: reason,
+            adjustmentNotes: notes,
+            originalAmount: oldAmount,
+            newAmount: newAmount
+        };
+
+        this.transactions.push(adjustmentTransaction);
+
+        this.markDataChanged();
+        this.saveAllData();
+
+        // Log the activity
+        const changeDescription = newAmount > oldAmount ?
+            `increased from ₹${oldAmount.toLocaleString()} to ₹${newAmount.toLocaleString()}` :
+            newAmount < oldAmount ?
+            `reduced from ₹${oldAmount.toLocaleString()} to ₹${newAmount.toLocaleString()}` :
+            `corrected (no amount change)`;
+
+        this.addActivity('Fee Adjusted',
+            `${member.name}'s ${year} fee ${changeDescription}. Reason: ${reason}`);
+
+        // Refresh displays
+        this.updateDashboard();
+        this.renderMembers();
+        this.updateFeeManagement();
+
+        // Show success message
+        this.showMessage(
+            `Successfully updated ${member.name}'s ${year} fee to ₹${newAmount.toLocaleString()}`,
+            'success'
+        );
+
+        // Close modal and reset
+        document.getElementById('edit-member-fee-modal').style.display = 'none';
+        this.currentEditingFee = null;
+    }
+
+
+
+    // Expense Management Methods
+    openExpenseModal(expense = null) {
+        const modal = document.getElementById('expense-modal');
+        const title = document.getElementById('expense-modal-title');
+        const form = document.getElementById('expense-form');
+
+        this.currentEditingExpense = expense;
+
+        if (expense) {
+            title.textContent = 'Edit Expense';
+            document.getElementById('expense-date').value = expense.date;
+            document.getElementById('expense-description').value = expense.description;
+            document.getElementById('expense-category').value = expense.category;
+            document.getElementById('expense-amount').value = expense.amount;
+            document.getElementById('expense-paid-by').value = expense.paidBy;
+            document.getElementById('expense-status').value = expense.status;
+            document.getElementById('expense-receipt').value = expense.receipt || '';
+        } else {
+            title.textContent = 'Add New Expense';
+            form.reset();
+            document.getElementById('expense-date').value = new Date().toISOString().split('T')[0];
+        }
+
+        modal.style.display = 'block';
+    }
+
+    saveExpense() {
+        const date = document.getElementById('expense-date').value;
+        const description = document.getElementById('expense-description').value;
+        const category = document.getElementById('expense-category').value;
+        const amount = parseFloat(document.getElementById('expense-amount').value);
+        const paidBy = document.getElementById('expense-paid-by').value;
+        const status = document.getElementById('expense-status').value;
+        const receipt = document.getElementById('expense-receipt').value;
+
+        if (this.currentEditingExpense) {
+            // Edit existing expense
+            const expense = this.expenses.find(e => e.id === this.currentEditingExpense.id);
+            expense.date = date;
+            expense.description = description;
+            expense.category = category;
+            expense.amount = amount;
+            expense.paidBy = paidBy;
+            expense.status = status;
+            expense.receipt = receipt;
+
+            this.addActivity('Expense Updated', `Updated expense: ${description}`);
+        } else {
+            // Add new expense
+            const newExpense = {
+                id: Date.now(),
+                date,
+                description,
+                category,
+                amount,
+                paidBy,
+                status,
+                receipt,
+                timestamp: new Date().toISOString()
+            };
+
+            this.expenses.push(newExpense);
+            this.addActivity('Expense Added', `Added new expense: ${description} - ₹${amount}`);
+        }
+
+        this.markDataChanged();
+        this.saveAllData();
+        this.renderExpenses();
+        this.updateDashboard();
+        document.getElementById('expense-modal').style.display = 'none';
+    }
+
+    deleteExpense(id) {
+        if (confirm('Are you sure you want to delete this expense?')) {
+            const expense = this.expenses.find(e => e.id === id);
+            this.expenses = this.expenses.filter(e => e.id !== id);
+            this.markDataChanged();
+            this.saveAllData();
+            this.renderExpenses();
+            this.updateDashboard();
+            this.addActivity('Expense Deleted', `Deleted expense: ${expense.description}`);
+        }
+    }
+
+    renderExpenses() {
+        const tbody = document.getElementById('expenses-table-body');
+        const filteredExpenses = this.getFilteredExpenses();
+
+        tbody.innerHTML = filteredExpenses.map(expense => `
+            <tr>
+                <td>${new Date(expense.date).toLocaleDateString()}</td>
+                <td>${expense.description}</td>
+                <td>${expense.category}</td>
+                <td>₹${expense.amount.toLocaleString()}</td>
+                <td>${expense.paidBy}</td>
+                <td><span class="status-badge status-${expense.status.toLowerCase()}">${expense.status}</span></td>
+                <td>${expense.receipt ? '✓' : '-'}</td>
+                <td class="action-buttons">
+                    <button class="btn btn-small btn-primary" onclick="ttClub.openExpenseModal(${JSON.stringify(expense).replace(/"/g, '&quot;')})">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                    <button class="btn btn-small btn-danger" onclick="ttClub.deleteExpense(${expense.id})">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </td>
+            </tr>
+        `).join('');
+
+        this.updateExpenseSummary();
+    }
+
+    getFilteredExpenses() {
+        const searchTerm = document.getElementById('expense-search')?.value.toLowerCase() || '';
+        const categoryFilter = document.getElementById('expense-category-filter')?.value || '';
+        const statusFilter = document.getElementById('expense-status-filter')?.value || '';
+
+        return this.expenses.filter(expense => {
+            const matchesSearch = expense.description.toLowerCase().includes(searchTerm) ||
+                                expense.paidBy.toLowerCase().includes(searchTerm);
+            const matchesCategory = !categoryFilter || expense.category === categoryFilter;
+            const matchesStatus = !statusFilter || expense.status === statusFilter;
+
+            return matchesSearch && matchesCategory && matchesStatus;
+        });
+    }
+
+    filterExpenses() {
+        this.renderExpenses();
+    }
+
+    updateExpenseSummary() {
+        const totalExpenses = this.expenses.reduce((sum, e) => sum + e.amount, 0);
+        const currentMonth = new Date().getMonth();
+        const currentYear = new Date().getFullYear();
+        const monthExpenses = this.expenses
+            .filter(e => {
+                const expenseDate = new Date(e.date);
+                return expenseDate.getMonth() === currentMonth && expenseDate.getFullYear() === currentYear;
+            })
+            .reduce((sum, e) => sum + e.amount, 0);
+        const pendingReimbursements = this.expenses
+            .filter(e => e.status === 'Pending')
+            .reduce((sum, e) => sum + e.amount, 0);
+
+        document.getElementById('total-expenses').textContent = `₹${totalExpenses.toLocaleString()}`;
+        document.getElementById('month-expenses').textContent = `₹${monthExpenses.toLocaleString()}`;
+        document.getElementById('pending-reimbursements').textContent = `₹${pendingReimbursements.toLocaleString()}`;
+    }
+
+    // Contribution Management Methods
+    openContributionModal(contribution = null) {
+        const modal = document.getElementById('contribution-modal');
+        const title = document.getElementById('contribution-modal-title');
+        const form = document.getElementById('contribution-form');
+
+        this.currentEditingContribution = contribution;
+
+        if (contribution) {
+            title.textContent = 'Edit Contribution';
+            document.getElementById('contribution-date').value = contribution.date;
+            document.getElementById('contribution-name').value = contribution.contributorName;
+            document.getElementById('contribution-location').value = contribution.location;
+            document.getElementById('contribution-type').value = contribution.type;
+            document.getElementById('contribution-purpose').value = contribution.purpose;
+            document.getElementById('contribution-amount').value = contribution.amount;
+            document.getElementById('contribution-receipt').value = contribution.receipt || '';
+        } else {
+            title.textContent = 'Add New Contribution';
+            form.reset();
+            document.getElementById('contribution-date').value = new Date().toISOString().split('T')[0];
+        }
+
+        modal.style.display = 'block';
+    }
+
+    saveContribution() {
+        const date = document.getElementById('contribution-date').value;
+        const contributorName = document.getElementById('contribution-name').value;
+        const location = document.getElementById('contribution-location').value;
+        const type = document.getElementById('contribution-type').value;
+        const purpose = document.getElementById('contribution-purpose').value;
+        const amount = parseFloat(document.getElementById('contribution-amount').value);
+        const receipt = document.getElementById('contribution-receipt').value;
+
+        if (this.currentEditingContribution) {
+            // Edit existing contribution
+            const contribution = this.contributions.find(c => c.id === this.currentEditingContribution.id);
+            contribution.date = date;
+            contribution.contributorName = contributorName;
+            contribution.location = location;
+            contribution.type = type;
+            contribution.purpose = purpose;
+            contribution.amount = amount;
+            contribution.receipt = receipt;
+
+            this.addActivity('Contribution Updated', `Updated contribution from ${contributorName}`);
+        } else {
+            // Add new contribution
+            const newContribution = {
+                id: Date.now(),
+                date,
+                contributorName,
+                location,
+                type,
+                purpose,
+                amount,
+                receipt,
+                timestamp: new Date().toISOString()
+            };
+
+            this.contributions.push(newContribution);
+            this.addActivity('Contribution Added', `Added new contribution from ${contributorName} - ₹${amount}`);
+        }
+
+        this.markDataChanged();
+        this.saveAllData();
+        this.renderContributions();
+        this.updateDashboard();
+        document.getElementById('contribution-modal').style.display = 'none';
+    }
+
+    deleteContribution(id) {
+        if (confirm('Are you sure you want to delete this contribution?')) {
+            const contribution = this.contributions.find(c => c.id === id);
+            this.contributions = this.contributions.filter(c => c.id !== id);
+            this.markDataChanged();
+            this.saveAllData();
+            this.renderContributions();
+            this.updateDashboard();
+            this.addActivity('Contribution Deleted', `Deleted contribution from ${contribution.contributorName}`);
+        }
+    }
+
+    renderContributions() {
+        const tbody = document.getElementById('contributions-table-body');
+        const filteredContributions = this.getFilteredContributions();
+
+        tbody.innerHTML = filteredContributions.map(contribution => `
+            <tr>
+                <td>${new Date(contribution.date).toLocaleDateString()}</td>
+                <td>${contribution.contributorName}</td>
+                <td>${contribution.location}</td>
+                <td><span class="status-badge type-${contribution.type.toLowerCase().replace(' ', '-')}">${contribution.type}</span></td>
+                <td>${contribution.purpose}</td>
+                <td>₹${contribution.amount.toLocaleString()}</td>
+                <td>${contribution.receipt ? '✓' : '-'}</td>
+                <td class="action-buttons">
+                    <button class="btn btn-small btn-primary" onclick="ttClub.openContributionModal(${JSON.stringify(contribution).replace(/"/g, '&quot;')})">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                    <button class="btn btn-small btn-danger" onclick="ttClub.deleteContribution(${contribution.id})">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </td>
+            </tr>
+        `).join('');
+
+        this.updateContributionSummary();
+    }
+
+    getFilteredContributions() {
+        const searchTerm = document.getElementById('contribution-search')?.value.toLowerCase() || '';
+        const typeFilter = document.getElementById('contribution-type-filter')?.value || '';
+
+        return this.contributions.filter(contribution => {
+            const matchesSearch = contribution.contributorName.toLowerCase().includes(searchTerm) ||
+                                contribution.location.toLowerCase().includes(searchTerm) ||
+                                contribution.purpose.toLowerCase().includes(searchTerm);
+            const matchesType = !typeFilter || contribution.type === typeFilter;
+
+            return matchesSearch && matchesType;
+        });
+    }
+
+    filterContributions() {
+        this.renderContributions();
+    }
+
+    updateContributionSummary() {
+        const totalContributions = this.contributions.reduce((sum, c) => sum + c.amount, 0);
+        const memberContributions = this.contributions
+            .filter(c => c.type === 'Member')
+            .reduce((sum, c) => sum + c.amount, 0);
+        const externalContributions = this.contributions
+            .filter(c => c.type === 'External' || c.type === 'Donation' || c.type === 'Sponsorship')
+            .reduce((sum, c) => sum + c.amount, 0);
+
+        document.getElementById('total-contributions').textContent = `₹${totalContributions.toLocaleString()}`;
+        document.getElementById('member-contributions').textContent = `₹${memberContributions.toLocaleString()}`;
+        document.getElementById('external-contributions').textContent = `₹${externalContributions.toLocaleString()}`;
+    }
+
     // Import JSON Database
     importDatabaseJSON(file) {
         if (!file) return;
@@ -1261,6 +2197,10 @@ class TTClubManager {
                         this.transactions = importedData.transactions || [];
                         this.invoices = importedData.invoices || [];
                         this.activities = importedData.activities || [];
+                        this.expenses = importedData.expenses || [];
+                        this.contributions = importedData.contributions || [];
+                        this.pendingFees = importedData.pendingFees || [];
+                        this.feeYears = importedData.feeYears || [];
                         this.settings = importedData.settings || this.getDefaultSettings();
 
                         // Save imported data
@@ -1271,6 +2211,8 @@ class TTClubManager {
                         this.renderMembers();
                         this.updateFeeManagement();
                         this.renderInvoices();
+                        this.renderExpenses();
+                        this.renderContributions();
                         this.updateReports();
 
                         this.addActivity('Data Import', `Imported database from ${file.name}`);
@@ -1295,12 +2237,54 @@ class TTClubManager {
                Array.isArray(data.members) &&
                Array.isArray(data.transactions) &&
                Array.isArray(data.invoices) &&
-               Array.isArray(data.activities);
+               Array.isArray(data.activities) &&
+               Array.isArray(data.expenses) &&
+               Array.isArray(data.contributions) &&
+               (data.pendingFees === undefined || Array.isArray(data.pendingFees));
     }
 }
 
 // Initialize the application
 let ttClub;
+
+function initializeApp() {
+    console.log('Attempting to initialize app...');
+    console.log('TTClubDatabase available:', typeof TTClubDatabase !== 'undefined');
+
+    if (typeof TTClubDatabase !== 'undefined') {
+        try {
+            ttClub = new TTClubManager();
+            console.log('TTClubManager initialized successfully');
+        } catch (error) {
+            console.error('Failed to initialize TTClubManager:', error);
+            showInitError('Failed to initialize application: ' + error.message);
+        }
+    } else {
+        console.log('TTClubDatabase not ready, retrying...');
+        setTimeout(initializeApp, 50); // Retry after 50ms
+    }
+}
+
+function showInitError(message) {
+    // Remove loading screen if it exists
+    const overlay = document.getElementById('loading-overlay');
+    if (overlay) overlay.remove();
+
+    // Show error message
+    document.body.insertAdjacentHTML('beforeend', `
+        <div style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+                   background: white; padding: 2rem; border-radius: 8px; box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+                   text-align: center; z-index: 10000;">
+            <h3 style="color: #e74c3c; margin-bottom: 1rem;">Initialization Error</h3>
+            <p>${message}</p>
+            <button onclick="location.reload()" style="padding: 0.5rem 1rem; background: #3498db; color: white; border: none; border-radius: 4px; cursor: pointer;">
+                Reload Page
+            </button>
+        </div>
+    `);
+}
+
 document.addEventListener('DOMContentLoaded', () => {
-    ttClub = new TTClubManager();
+    console.log('DOM loaded, starting initialization...');
+    initializeApp();
 });

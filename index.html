@@ -35,6 +35,12 @@
                     <button class="nav-btn" data-section="invoices">
                         <i class="fas fa-file-invoice"></i> Invoices
                     </button>
+                    <button class="nav-btn" data-section="expenses">
+                        <i class="fas fa-receipt"></i> Expenses
+                    </button>
+                    <button class="nav-btn" data-section="contributions">
+                        <i class="fas fa-hand-holding-usd"></i> Contributions
+                    </button>
                     <button class="nav-btn" data-section="reports">
                         <i class="fas fa-chart-bar"></i> Reports
                     </button>
@@ -106,22 +112,26 @@
                     </select>
                 </div>
 
+                <div class="member-legend">
+                    <div class="legend-item">
+                        <i class="fas fa-crown" style="color: #f39c12;"></i>
+                        <span>Founding Members (highlighted rows)</span>
+                    </div>
+                    <div class="legend-item">
+                        <span class="unpaid-indicator">₹0</span>
+                        <span>Unpaid fees</span>
+                    </div>
+                    <div class="legend-item">
+                        <i class="fas fa-pause-circle" style="color: #6c757d;"></i>
+                        <span>Inactive members</span>
+                    </div>
+                </div>
+
                 <div class="table-container">
                     <div class="mobile-scroll-hint">← Scroll horizontally to see all columns →</div>
                     <table class="members-table">
-                        <thead>
-                            <tr>
-                                <th>Sl No</th>
-                                <th>Name</th>
-                                <th>Villa No</th>
-                                <th>Status</th>
-                                <th>Membership Fee</th>
-                                <th>Annual Fee 2023</th>
-                                <th>Annual Fee 2024</th>
-                                <th>Annual Fee 2025</th>
-                                <th>Total Paid</th>
-                                <th>Actions</th>
-                            </tr>
+                        <thead id="members-table-header">
+                            <!-- Headers will be populated by JavaScript -->
                         </thead>
                         <tbody id="members-table-body">
                             <!-- Members will be populated by JavaScript -->
@@ -134,9 +144,14 @@
             <section id="fees" class="section">
                 <div class="section-header">
                     <h2>Fee Management</h2>
-                    <button class="btn btn-primary" id="collect-fee-btn">
-                        <i class="fas fa-money-bill-wave"></i> Collect Fee
-                    </button>
+                    <div class="fee-header-actions">
+                        <button class="btn btn-secondary" id="manage-fee-years-btn">
+                            <i class="fas fa-calendar-plus"></i> Manage Fee Years
+                        </button>
+                        <button class="btn btn-primary" id="collect-fee-btn">
+                            <i class="fas fa-money-bill-wave"></i> Collect Fee
+                        </button>
+                    </div>
                 </div>
                 
                 <div class="fee-summary">
@@ -158,9 +173,14 @@
                 </div>
 
                 <div class="pending-fees">
-                    <h3>Pending Fee Collections</h3>
+                    <div class="pending-fees-header">
+                        <h3>Pending Fee Collections</h3>
+                        <button class="btn btn-secondary btn-small" id="add-pending-fee-btn">
+                            <i class="fas fa-plus"></i> Add Pending Fee
+                        </button>
+                    </div>
                     <div id="pending-fees-list" class="pending-list">
-                        <!-- Pending fees will be populated by JavaScript -->
+                        <p class="empty-state">No pending fees added. Click "Add Pending Fee" to create pending fee records.</p>
                     </div>
                 </div>
             </section>
@@ -176,6 +196,127 @@
                 
                 <div class="invoice-list" id="invoice-list">
                     <!-- Invoices will be populated by JavaScript -->
+                </div>
+            </section>
+
+            <!-- Expenses Section -->
+            <section id="expenses" class="section">
+                <div class="section-header">
+                    <h2>Expense Management</h2>
+                    <button class="btn btn-primary" id="add-expense-btn">
+                        <i class="fas fa-plus"></i> Add Expense
+                    </button>
+                </div>
+
+                <div class="expense-summary">
+                    <div class="expense-card">
+                        <h3>Total Expenses</h3>
+                        <p id="total-expenses">₹0</p>
+                    </div>
+                    <div class="expense-card">
+                        <h3>This Month</h3>
+                        <p id="month-expenses">₹0</p>
+                    </div>
+                    <div class="expense-card">
+                        <h3>Pending Reimbursements</h3>
+                        <p id="pending-reimbursements">₹0</p>
+                    </div>
+                </div>
+
+                <div class="expense-filters">
+                    <input type="text" id="expense-search" placeholder="Search expenses..." class="search-input">
+                    <select id="expense-category-filter" class="filter-select">
+                        <option value="">All Categories</option>
+                        <option value="Equipment">Equipment</option>
+                        <option value="Maintenance">Maintenance</option>
+                        <option value="Events">Events</option>
+                        <option value="Utilities">Utilities</option>
+                        <option value="Other">Other</option>
+                    </select>
+                    <select id="expense-status-filter" class="filter-select">
+                        <option value="">All Status</option>
+                        <option value="Paid">Paid</option>
+                        <option value="Pending">Pending</option>
+                        <option value="Reimbursed">Reimbursed</option>
+                    </select>
+                </div>
+
+                <div class="table-container">
+                    <div class="mobile-scroll-hint">← Scroll horizontally to see all columns →</div>
+                    <table class="expenses-table">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Description</th>
+                                <th>Category</th>
+                                <th>Amount</th>
+                                <th>Paid By</th>
+                                <th>Status</th>
+                                <th>Receipt</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="expenses-table-body">
+                            <!-- Expenses will be populated by JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Contributions Section -->
+            <section id="contributions" class="section">
+                <div class="section-header">
+                    <h2>Individual & External Contributions</h2>
+                    <button class="btn btn-primary" id="add-contribution-btn">
+                        <i class="fas fa-plus"></i> Add Contribution
+                    </button>
+                </div>
+
+                <div class="contribution-summary">
+                    <div class="contribution-card">
+                        <h3>Total Contributions</h3>
+                        <p id="total-contributions">₹0</p>
+                    </div>
+                    <div class="contribution-card">
+                        <h3>Member Contributions</h3>
+                        <p id="member-contributions">₹0</p>
+                    </div>
+                    <div class="contribution-card">
+                        <h3>External Contributions</h3>
+                        <p id="external-contributions">₹0</p>
+                    </div>
+                </div>
+
+                <div class="contribution-filters">
+                    <input type="text" id="contribution-search" placeholder="Search contributions..." class="search-input">
+                    <select id="contribution-type-filter" class="filter-select">
+                        <option value="">All Types</option>
+                        <option value="Member">Member Contribution</option>
+                        <option value="External">External Contribution</option>
+                        <option value="Donation">Donation</option>
+                        <option value="Sponsorship">Sponsorship</option>
+                    </select>
+                </div>
+
+                <div class="table-container">
+                    <div class="mobile-scroll-hint">← Scroll horizontally to see all columns →</div>
+                    <table class="contributions-table">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Contributor Name</th>
+                                <th>Villa/Location</th>
+                                <th>Type</th>
+                                <th>Purpose</th>
+                                <th>Amount</th>
+                                <th>Receipt</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="contributions-table-body">
+                            <!-- Contributions will be populated by JavaScript -->
+                        </tbody>
+                    </table>
                 </div>
             </section>
 
@@ -212,6 +353,9 @@
                     </button>
                     <button class="btn btn-warning" id="import-json">
                         <i class="fas fa-file-upload"></i> Import JSON
+                    </button>
+                    <button class="btn btn-danger" id="reset-data" title="Reset to original database">
+                        <i class="fas fa-refresh"></i> Reset to Original
                     </button>
                     <input type="file" id="json-file-input" accept=".json" style="display: none;">
                 </div>
@@ -290,6 +434,228 @@
         </div>
     </div>
 
+    <!-- Expense Modal -->
+    <div id="expense-modal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2 id="expense-modal-title">Add New Expense</h2>
+            <form id="expense-form">
+                <div class="form-group">
+                    <label for="expense-date">Date:</label>
+                    <input type="date" id="expense-date" required>
+                </div>
+                <div class="form-group">
+                    <label for="expense-description">Description:</label>
+                    <input type="text" id="expense-description" placeholder="e.g., Table tennis balls, Net repair" required>
+                </div>
+                <div class="form-group">
+                    <label for="expense-category">Category:</label>
+                    <select id="expense-category" required>
+                        <option value="">Select Category</option>
+                        <option value="Equipment">Equipment</option>
+                        <option value="Maintenance">Maintenance</option>
+                        <option value="Events">Events</option>
+                        <option value="Utilities">Utilities</option>
+                        <option value="Other">Other</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="expense-amount">Amount (₹):</label>
+                    <input type="number" id="expense-amount" min="0" step="0.01" required>
+                </div>
+                <div class="form-group">
+                    <label for="expense-paid-by">Paid By:</label>
+                    <input type="text" id="expense-paid-by" placeholder="Name of person who paid" required>
+                </div>
+                <div class="form-group">
+                    <label for="expense-status">Status:</label>
+                    <select id="expense-status" required>
+                        <option value="Paid">Paid</option>
+                        <option value="Pending">Pending</option>
+                        <option value="Reimbursed">Reimbursed</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="expense-receipt">Receipt/Notes:</label>
+                    <textarea id="expense-receipt" placeholder="Receipt details or additional notes" rows="3"></textarea>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" id="cancel-expense">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Expense</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Contribution Modal -->
+    <div id="contribution-modal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2 id="contribution-modal-title">Add New Contribution</h2>
+            <form id="contribution-form">
+                <div class="form-group">
+                    <label for="contribution-date">Date:</label>
+                    <input type="date" id="contribution-date" required>
+                </div>
+                <div class="form-group">
+                    <label for="contribution-name">Contributor Name:</label>
+                    <input type="text" id="contribution-name" placeholder="Full name of contributor" required>
+                </div>
+                <div class="form-group">
+                    <label for="contribution-location">Villa/Location:</label>
+                    <input type="text" id="contribution-location" placeholder="Villa number or location" required>
+                </div>
+                <div class="form-group">
+                    <label for="contribution-type">Type:</label>
+                    <select id="contribution-type" required>
+                        <option value="">Select Type</option>
+                        <option value="Member">Member Contribution</option>
+                        <option value="External">External Contribution</option>
+                        <option value="Donation">Donation</option>
+                        <option value="Sponsorship">Sponsorship</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="contribution-purpose">Purpose:</label>
+                    <input type="text" id="contribution-purpose" placeholder="e.g., Equipment fund, Tournament sponsorship" required>
+                </div>
+                <div class="form-group">
+                    <label for="contribution-amount">Amount (₹):</label>
+                    <input type="number" id="contribution-amount" min="0" step="0.01" required>
+                </div>
+                <div class="form-group">
+                    <label for="contribution-receipt">Receipt/Notes:</label>
+                    <textarea id="contribution-receipt" placeholder="Receipt details or additional notes" rows="3"></textarea>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" id="cancel-contribution">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Contribution</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Pending Fee Modal -->
+    <div id="pending-fee-modal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>Add Pending Fee</h2>
+            <form id="pending-fee-form">
+                <div class="form-group">
+                    <label for="pending-fee-member">Member:</label>
+                    <select id="pending-fee-member" required>
+                        <option value="">Select Member</option>
+                        <!-- Members will be populated by JavaScript -->
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="pending-fee-type">Fee Type:</label>
+                    <select id="pending-fee-type" required>
+                        <!-- Fee types will be populated by JavaScript -->
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="pending-fee-amount">Amount (₹):</label>
+                    <input type="number" id="pending-fee-amount" min="0" step="1" value="500" required>
+                </div>
+                <div class="form-group">
+                    <label for="pending-fee-due-date">Due Date:</label>
+                    <input type="date" id="pending-fee-due-date" required>
+                </div>
+                <div class="form-group">
+                    <label for="pending-fee-notes">Notes (Optional):</label>
+                    <textarea id="pending-fee-notes" placeholder="Additional notes about this pending fee" rows="3"></textarea>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" id="cancel-pending-fee">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Add Pending Fee</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Fee Years Management Modal -->
+    <div id="fee-years-modal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>Manage Fee Years</h2>
+
+            <div class="current-years-section">
+                <h3>Current Fee Years</h3>
+                <div id="current-fee-years" class="fee-years-list">
+                    <!-- Current years will be populated by JavaScript -->
+                </div>
+            </div>
+
+            <div class="add-year-section">
+                <h3>Add New Fee Year</h3>
+                <form id="add-fee-year-form">
+                    <div class="form-group">
+                        <label for="new-fee-year">Year:</label>
+                        <input type="number" id="new-fee-year" min="2023" max="2050" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="new-fee-amount">Default Annual Fee Amount (₹):</label>
+                        <input type="number" id="new-fee-amount" min="0" step="1" value="500" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="fee-year-description">Description (Optional):</label>
+                        <input type="text" id="fee-year-description" placeholder="e.g., Regular annual fee, Special assessment">
+                    </div>
+                    <div class="form-actions">
+                        <button type="button" class="btn btn-secondary" id="cancel-fee-year">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Add Fee Year</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Member Fee Modal -->
+    <div id="edit-member-fee-modal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>Edit Member Fee</h2>
+            <form id="edit-member-fee-form">
+                <div class="member-fee-info">
+                    <p><strong>Member:</strong> <span id="edit-fee-member-name"></span></p>
+                    <p><strong>Fee Year:</strong> <span id="edit-fee-year"></span></p>
+                    <p><strong>Current Amount:</strong> ₹<span id="edit-fee-current-amount"></span></p>
+                </div>
+
+                <div class="form-group">
+                    <label for="edit-fee-new-amount">New Amount (₹):</label>
+                    <input type="number" id="edit-fee-new-amount" min="0" step="1" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="edit-fee-reason">Reason for Change:</label>
+                    <select id="edit-fee-reason" required>
+                        <option value="">Select Reason</option>
+                        <option value="Data Entry Error">Data Entry Error</option>
+                        <option value="Partial Payment Correction">Partial Payment Correction</option>
+                        <option value="Refund Applied">Refund Applied</option>
+                        <option value="Late Fee Added">Late Fee Added</option>
+                        <option value="Discount Applied">Discount Applied</option>
+                        <option value="Administrative Adjustment">Administrative Adjustment</option>
+                        <option value="Other">Other</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="edit-fee-notes">Additional Notes (Optional):</label>
+                    <textarea id="edit-fee-notes" placeholder="Explain the reason for this fee adjustment" rows="3"></textarea>
+                </div>
+
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" id="cancel-edit-fee">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Update Fee</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="db.js"></script>
     <script src="app.js"></script>
 </body>
 </html>

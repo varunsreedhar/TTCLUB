@@ -313,6 +313,93 @@ body {
     background: #f8f9fa;
 }
 
+/* Founding Member Row Highlighting */
+.founding-member-row {
+    background: linear-gradient(90deg, #fff9e6 0%, #ffffff 100%);
+    border-left: 4px solid #f39c12;
+}
+
+.founding-member-row:hover {
+    background: linear-gradient(90deg, #fff3cd 0%, #f8f9fa 100%);
+}
+
+.founding-icon {
+    color: #f39c12;
+    margin-right: 0.5rem;
+    font-size: 0.9rem;
+}
+
+.inactive-member {
+    opacity: 0.6;
+    background: #f8f9fa;
+}
+
+.inactive-member:hover {
+    background: #e9ecef;
+}
+
+.inactive-icon {
+    color: #6c757d;
+    margin-left: 0.5rem;
+    font-size: 0.8rem;
+}
+
+.member-name {
+    display: flex;
+    align-items: center;
+    font-weight: 500;
+}
+
+/* Fee Status Styling */
+.paid-fee {
+    color: #27ae60;
+    font-weight: 500;
+}
+
+.unpaid-fee {
+    color: #e74c3c;
+    font-weight: 500;
+    background: #ffeaea;
+    padding: 0.25rem;
+    border-radius: 4px;
+}
+
+.total-paid {
+    font-weight: 600;
+    color: #2c3e50;
+    background: #e8f5e8;
+    padding: 0.25rem;
+    border-radius: 4px;
+}
+
+/* Member Legend */
+.member-legend {
+    display: flex;
+    gap: 2rem;
+    margin-bottom: 1rem;
+    padding: 1rem;
+    background: #f8f9fa;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    flex-wrap: wrap;
+}
+
+.legend-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: #6c757d;
+}
+
+.unpaid-indicator {
+    background: #ffeaea;
+    color: #e74c3c;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    font-weight: 500;
+    font-size: 0.8rem;
+}
+
 .status-badge {
     padding: 0.25rem 0.75rem;
     border-radius: 20px;
@@ -384,6 +471,17 @@ body {
     overflow-y: auto;
 }
 
+.pending-fees-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.pending-fees-header h3 {
+    margin: 0;
+}
+
 .pending-item {
     display: flex;
     justify-content: space-between;
@@ -393,6 +491,167 @@ body {
     border-radius: 8px;
     margin-bottom: 0.5rem;
     background: #f8f9fa;
+}
+
+.pending-info {
+    flex: 1;
+}
+
+.pending-info .notes {
+    color: #6c757d;
+    font-style: italic;
+}
+
+.pending-actions {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+}
+
+.empty-state {
+    text-align: center;
+    color: #6c757d;
+    font-style: italic;
+    padding: 2rem;
+    background: #f8f9fa;
+    border-radius: 8px;
+    border: 2px dashed #dee2e6;
+}
+
+/* Fee Years Management */
+.fee-header-actions {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+}
+
+.current-years-section, .add-year-section {
+    margin-bottom: 2rem;
+}
+
+.current-years-section h3, .add-year-section h3 {
+    color: #2c3e50;
+    margin-bottom: 1rem;
+    border-bottom: 2px solid #ecf0f1;
+    padding-bottom: 0.5rem;
+}
+
+.fee-years-list {
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+.fee-year-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem;
+    border: 1px solid #ecf0f1;
+    border-radius: 8px;
+    margin-bottom: 0.5rem;
+    background: white;
+    transition: all 0.3s ease;
+}
+
+.fee-year-item:hover {
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.fee-year-item.inactive {
+    opacity: 0.6;
+    background: #f8f9fa;
+}
+
+.fee-year-info {
+    flex: 1;
+}
+
+.fee-year-info strong {
+    font-size: 1.1rem;
+    color: #2c3e50;
+    margin-right: 1rem;
+}
+
+.fee-amount {
+    background: #e8f5e8;
+    color: #27ae60;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    font-weight: 500;
+    margin-right: 1rem;
+}
+
+.fee-year-info small {
+    display: block;
+    color: #6c757d;
+    margin-top: 0.25rem;
+}
+
+.fee-year-actions {
+    display: flex;
+    gap: 0.5rem;
+}
+
+/* Member Fee Editing */
+.fee-cell {
+    position: relative;
+}
+
+.fee-amount-container {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+}
+
+.fee-amount {
+    flex: 1;
+}
+
+.btn-edit-fee {
+    background: none;
+    border: none;
+    color: #6c757d;
+    cursor: pointer;
+    padding: 0.25rem;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    opacity: 0;
+    transition: all 0.3s ease;
+}
+
+.fee-cell:hover .btn-edit-fee {
+    opacity: 1;
+}
+
+.btn-edit-fee:hover {
+    background: #f8f9fa;
+    color: #495057;
+}
+
+.paid-fee .btn-edit-fee {
+    color: #28a745;
+}
+
+.unpaid-fee .btn-edit-fee {
+    color: #dc3545;
+}
+
+.member-fee-info {
+    background: #f8f9fa;
+    padding: 1rem;
+    border-radius: 8px;
+    margin-bottom: 1.5rem;
+    border-left: 4px solid #007bff;
+}
+
+.member-fee-info p {
+    margin: 0.5rem 0;
+    font-size: 0.95rem;
+}
+
+.member-fee-info strong {
+    color: #2c3e50;
 }
 
 /* Reports */
@@ -547,7 +806,7 @@ body {
     .nav {
         width: 100%;
         display: grid;
-        grid-template-columns: repeat(2, 1fr);
+        grid-template-columns: repeat(3, 1fr);
         gap: 0.5rem;
     }
 
@@ -628,6 +887,27 @@ body {
         white-space: nowrap;
     }
 
+    /* Mobile founding member highlighting */
+    .founding-member-row {
+        border-left: 3px solid #f39c12 !important;
+        background: #fff9e6 !important;
+    }
+
+    .founding-icon, .inactive-icon {
+        font-size: 0.8rem;
+    }
+
+    .member-name {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.25rem;
+    }
+
+    .unpaid-fee, .total-paid {
+        padding: 0.125rem 0.25rem;
+        font-size: 0.8rem;
+    }
+
     /* Mobile Action Buttons */
     .action-buttons {
         flex-direction: column;
@@ -649,7 +929,7 @@ body {
     }
 
     /* Mobile Fee Management */
-    .fee-summary {
+    .fee-summary, .expense-summary, .contribution-summary {
         grid-template-columns: 1fr;
         gap: 1rem;
     }
@@ -844,6 +1124,111 @@ body {
 .invoice-actions {
     display: flex;
     gap: 0.5rem;
+}
+
+/* Expense Management Styles */
+.expense-summary, .contribution-summary {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.expense-card, .contribution-card {
+    background: white;
+    padding: 1.5rem;
+    border-radius: 12px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    text-align: center;
+    border-left: 4px solid #e74c3c;
+}
+
+.contribution-card {
+    border-left-color: #27ae60;
+}
+
+.expense-card h3, .contribution-card h3 {
+    color: #2c3e50;
+    margin-bottom: 1rem;
+    font-size: 1rem;
+}
+
+.expense-card p, .contribution-card p {
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: #e74c3c;
+    margin: 0;
+}
+
+.contribution-card p {
+    color: #27ae60;
+}
+
+.expense-filters, .contribution-filters {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+    flex-wrap: wrap;
+}
+
+.expenses-table, .contributions-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.9rem;
+}
+
+.expenses-table th, .contributions-table th {
+    background: #34495e;
+    color: white;
+    padding: 1rem 0.75rem;
+    text-align: left;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.expenses-table td, .contributions-table td {
+    padding: 0.75rem;
+    border-bottom: 1px solid #ecf0f1;
+    white-space: nowrap;
+}
+
+.expenses-table tr:hover, .contributions-table tr:hover {
+    background: #f8f9fa;
+}
+
+.status-paid {
+    background: #27ae60;
+    color: white;
+}
+
+.status-pending {
+    background: #f39c12;
+    color: white;
+}
+
+.status-reimbursed {
+    background: #3498db;
+    color: white;
+}
+
+.type-member {
+    background: #3498db;
+    color: white;
+}
+
+.type-external {
+    background: #9b59b6;
+    color: white;
+}
+
+.type-donation {
+    background: #27ae60;
+    color: white;
+}
+
+.type-sponsorship {
+    background: #e67e22;
+    color: white;
 }
 
 /* Financial Summary Styles */
