@@ -800,22 +800,22 @@ class TTClubManager {
 
             return `
                 <tr class="${rowClass} ${inactiveClass}" data-member-id="${member.id}">
-                    <td>${index + 1}</td>
-                    <td>
+                    <td data-label="Sl No">${index + 1}</td>
+                    <td data-label="Name">
                         <div class="member-name">
                             ${isFoundingMember ? '<i class="fas fa-crown founding-icon" title="Founding Member"></i>' : ''}
                             ${member.name}
                             ${isInactive ? '<i class="fas fa-pause-circle inactive-icon" title="Inactive Member"></i>' : ''}
                         </div>
                     </td>
-                    <td>${member.villaNo}</td>
-                    <td><span class="status-badge status-${member.status.toLowerCase().replace(/\s+/g, '-').replace(/[()]/g, '')}">${member.status}</span></td>
-                    <td>₹${member.membershipFee.toLocaleString()}</td>
+                    <td data-label="Villa">${member.villaNo}</td>
+                    <td data-label="Status"><span class="status-badge status-${member.status.toLowerCase().replace(/\s+/g, '-').replace(/[()]/g, '')}">${member.status}</span></td>
+                    <td data-label="Membership">₹${member.membershipFee.toLocaleString()}</td>
                     ${this.feeYears.sort((a, b) => a.year - b.year).map(feeYear => {
                         const feeKey = `annualFee${feeYear.year}`;
                         const feeAmount = member[feeKey] || 0;
                         return `
-                            <td class="${feeAmount === 0 ? 'unpaid-fee' : 'paid-fee'} fee-cell">
+                            <td data-label="${feeYear.year}" class="${feeAmount === 0 ? 'unpaid-fee' : 'paid-fee'} fee-cell">
                                 <div class="fee-amount-container">
                                     <span class="fee-amount">₹${feeAmount.toLocaleString()}</span>
                                     <button class="btn-edit-fee" onclick="ttClub.editMemberFee(${member.id}, ${feeYear.year}, ${feeAmount})" title="Edit ${feeYear.year} fee">
@@ -825,17 +825,17 @@ class TTClubManager {
                             </td>
                         `;
                     }).join('')}
-                    <td class="total-paid">₹${member.totalPaid.toLocaleString()}</td>
-                    <td class="action-buttons">
+                    <td data-label="Total Paid" class="total-paid">₹${member.totalPaid.toLocaleString()}</td>
+                    <td data-label="Actions" class="action-buttons">
                         <button class="btn btn-small btn-primary" onclick="ttClub.openMemberModal(${JSON.stringify(member).replace(/"/g, '&quot;')})" title="Edit Member">
-                            <i class="fas fa-edit"></i>
+                            <i class="fas fa-edit"></i> Edit
                         </button>
                         <button class="btn btn-small btn-danger" onclick="ttClub.deleteMember(${member.id})" title="Delete Member">
-                            <i class="fas fa-trash"></i>
+                            <i class="fas fa-trash"></i> Delete
                         </button>
-                        ${member.annualFee2023 === 0 || member.annualFee2024 === 0 || member.annualFee2025 === 0 ?
+                        ${this.hasUnpaidFees(member) ?
                             `<button class="btn btn-small btn-success" onclick="ttClub.openFeeModal('${member.id}')" title="Collect Fee">
-                                <i class="fas fa-money-bill-wave"></i>
+                                <i class="fas fa-money-bill-wave"></i> Collect
                             </button>` : ''
                         }
                     </td>
@@ -852,6 +852,14 @@ class TTClubManager {
                 this.addCollectFeeButtonTouchSupport();
             }, 100);
         }
+    }
+
+    hasUnpaidFees(member) {
+        // Check if member has any unpaid fees across all fee years
+        return this.feeYears.some(feeYear => {
+            const feeKey = `annualFee${feeYear.year}`;
+            return (member[feeKey] || 0) === 0;
+        });
     }
 
     renderMembersTableHeader(thead) {
