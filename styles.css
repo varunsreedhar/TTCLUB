@@ -1874,6 +1874,60 @@ button, .btn, .btn-small, .btn-success, .btn-primary, .btn-secondary, .btn-dange
     }
 }
 
+/* Mobile device specific styles */
+.mobile-device {
+    -webkit-user-select: none !important;
+    -moz-user-select: none !important;
+    -ms-user-select: none !important;
+    user-select: none !important;
+    -webkit-touch-callout: none !important;
+    -webkit-tap-highlight-color: transparent !important;
+}
+
+.mobile-device button,
+.mobile-device .btn,
+.mobile-device .nav-btn,
+.mobile-device .close,
+.mobile-device .stat-card.clickable {
+    -webkit-appearance: none !important;
+    -webkit-tap-highlight-color: transparent !important;
+    touch-action: manipulation !important;
+    user-select: none !important;
+    -webkit-user-select: none !important;
+    -webkit-touch-callout: none !important;
+    cursor: pointer !important;
+    position: relative !important;
+    z-index: 10 !important;
+    pointer-events: auto !important;
+    min-height: 50px !important;
+    min-width: 50px !important;
+    border: 2px solid transparent !important;
+    border-radius: 8px !important;
+    font-size: 1rem !important;
+    font-weight: 600 !important;
+    padding: 1rem !important;
+    transition: all 0.2s ease !important;
+}
+
+.mobile-device button:active,
+.mobile-device .btn:active,
+.mobile-device .nav-btn:active,
+.mobile-device .close:active,
+.mobile-device .stat-card.clickable:active {
+    transform: scale(0.95) !important;
+    opacity: 0.8 !important;
+}
+
+/* Force hardware acceleration on mobile */
+.mobile-device button,
+.mobile-device .btn,
+.mobile-device .stat-card {
+    -webkit-transform: translateZ(0) !important;
+    transform: translateZ(0) !important;
+    -webkit-backface-visibility: hidden !important;
+    backface-visibility: hidden !important;
+}
+
 /* Utility Classes */
 .text-center { text-align: center; }
 .text-right { text-align: right; }
